@@ -1,0 +1,4 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Button text="PLAY" display-tooltip-when-elided="true" style="height: 51px; width: 120px; right: -193px; top: 215px;" />
+    <ui:ProgressBar value="22" title="LOADING" style="height: 28px; width: 344px; right: -80px; top: 357px;" />
+</ui:UXML>
