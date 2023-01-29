@@ -1,4 +1,4 @@
 repository "Cloak & Dagger@GuildedToast@cloud"
   path "/"
-    br "/main"
-    co "/main"
+    smartbranch "/main" 
+     
