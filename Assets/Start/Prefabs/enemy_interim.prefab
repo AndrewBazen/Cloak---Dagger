@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 668341292506216638}
   - component: {fileID: -4108874711244544892}
   - component: {fileID: 824610532744783975}
+  - component: {fileID: -7681654240368414473}
   m_Layer: 0
   m_Name: enemy_interim
   m_TagString: enemy
@@ -72,8 +73,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 1805782005
-  m_SortingLayer: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 19159480f3786a441960f5393cb80800, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -102,6 +103,7 @@ MonoBehaviour:
   data: {fileID: 11400000, guid: f5407f619ac0c7242a82cfe966e1f6ab, type: 2}
   movement: 0
   initiative: 0
+  enemyPrefab: {fileID: 0}
   isEnemysTurn: 0
 --- !u!114 &824610532744783975
 MonoBehaviour:
@@ -117,3 +119,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   standingOnTile: {fileID: 0}
   initiative: 0
+--- !u!60 &-7681654240368414473
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536770745226722383}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.52, y: 0}
+    oldSize: {x: 1, y: 1.5}
+    newSize: {x: 1, y: 1.5}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1.5}
+      - {x: 0, y: 1.5}
+      - {x: -0.3, y: 0.75}
+      - {x: 0, y: 0}
+      - {x: 0.3, y: 0.75}

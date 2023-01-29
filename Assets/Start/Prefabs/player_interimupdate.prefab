@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7783610298921090742}
   - component: {fileID: 3490683629037706276}
   - component: {fileID: 8646172548935484116}
+  - component: {fileID: 1665346466057649150}
   m_Layer: 0
   m_Name: player_interimupdate
   m_TagString: Player
@@ -98,4 +99,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   standingOnTile: {fileID: 0}
-  initiative: 0
+  initiative: 20
+--- !u!114 &1665346466057649150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377899735657505207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f84ed836b010f4c4c99f2b11a9b148f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cursor: {fileID: 0}
+  speed: 4
+  enemies: []
+  playerPrefab: {fileID: 1377899735657505207}
+  player: {fileID: 0}
+  isPlayersTurn: 0
+  playerContainer: {fileID: 0}
+  playerMovement: 6

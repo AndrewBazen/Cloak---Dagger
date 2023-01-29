@@ -22,7 +22,7 @@ namespace Start.Scripts
         public Sprite pathSprite;
         public OverlayTile previous;
         public Vector3Int gridLocation;
-        public Vector2Int Grid2DLocation => new Vector2Int(gridLocation.x, gridLocation.y);
+        public Vector2Int Grid2DLocation => new (gridLocation.x, gridLocation.y);
 
         private void Awake()
         {

@@ -21,16 +21,28 @@ namespace Start.Scripts
     public int playerMovement;
 
     private readonly int _characterMovementRange = 6;
-    
+
+    private GameObject combatSystem;
+    private CombatController _combatController;
     private PathFinder _pathFinder;
     private RangeFinder _rangeFinder;
     private List<OverlayTile> _path;
     private List<OverlayTile> _rangeFinderTiles;
+    private OverlayTile _overlayTile;
     private bool _isMoving;
     private static Camera _camera;
+    
+    private void Awake()
+    {
+      player = GetComponent<CharacterInfo>();
+    }
 
     private void Start()
     {
+      combatSystem = GameObject.FindGameObjectWithTag("combatSystem");
+      _combatController = combatSystem.GetComponent<CombatController>();
+      playerContainer = GameObject.FindGameObjectWithTag("Players");
+      cursor = GameObject.FindGameObjectWithTag("cursor");
       isPlayersTurn = true;
       _camera = Camera.main;
       _pathFinder = new PathFinder();
@@ -43,46 +55,57 @@ namespace Start.Scripts
 
     void LateUpdate()
     {
-      if (player == null)
-      {
-        SpawnCharacter();
-      }
+      GetInRangeTiles();
+      _combatController.StartTurn();
 
-      enemies = GameObject.FindGameObjectsWithTag("enemy");
+      GetEnemies();
 
       if (isPlayersTurn)
       {
-        OverlayTile tile = new OverlayTile();
         RaycastHit2D? hit = GetFocusedOnTile();
 
         if (hit.HasValue)
         {
-          tile = hit.Value.collider.gameObject.GetComponent<OverlayTile>();
-          cursor.transform.position = tile.transform.position;
+          _overlayTile = hit.Value.collider.gameObject.GetComponent<OverlayTile>();
+          cursor.transform.position = _overlayTile.transform.position;
+
+
           if (!_isMoving)
           {
-            _path = _pathFinder.FindPath(player.standingOnTile, tile, _rangeFinderTiles);
+            _path = _pathFinder.FindPath(player.standingOnTile, _overlayTile, _rangeFinderTiles);
 
             foreach (var currTile in _path)
             {
-              if (currTile != tile)
+              if (currTile != _overlayTile)
                 currTile.SetSprite();
+              currTile.ShowTile();
             }
 
-            tile.ShowTile();
+            _overlayTile.ShowTile();
           }
-          
         }
-        MoveCharacter(tile);
+
+        if (_overlayTile != null)
+        {
+          MoveCharacter(_overlayTile);
+        }
       }
     }
 
-    private void SpawnCharacter()
+    private void GetEnemies()
     {
-      player = Instantiate(playerPrefab, playerContainer.transform).GetComponent<CharacterInfo>();
-      PositionCharacterOnLine(MapManager.Instance.playerSpawnTile);
-      GetInRangeTiles();
+      if (enemies.Length == 0)
+      {
+        enemies = GameObject.FindGameObjectsWithTag("enemy");
+      }
     }
+
+    // private void SpawnCharacter()
+    // {
+    //   player = Instantiate(playerPrefab, playerContainer.transform).GetComponent<CharacterInfo>();
+    //   PositionCharacterOnLine(MapManager.Instance.playerSpawnTile);
+    //   GetInRangeTiles();
+    // }
     
     private void ResetTiles()
     {
@@ -137,11 +160,7 @@ namespace Start.Scripts
       {
         GetInRangeTiles();
         _isMoving = false;
-        isPlayersTurn = false;
-        foreach (var enemy in enemies)
-        {
-          enemy.GetComponent<EnemyController>().isEnemysTurn = true;
-        }
+        _combatController.StopTurn();
       }
 
     }

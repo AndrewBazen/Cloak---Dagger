@@ -17,12 +17,13 @@ namespace Start.Scripts
         [SerializeField] private float speed;
         [SerializeField] private EnemyData data;
         [SerializeField] private int movement;
-        [SerializeField] private int initiative;
+        [SerializeField] public int initiative;
 
 
-        [SerializeField] private GameObject enemyPrefab;
-        
 
+
+        private GameObject combatSystem;
+        private CombatController _combatController;
         private GameObject _cursor;
         private PathFinder _pathFinder;
         private RangeFinder _rangeFinder;
@@ -45,6 +46,8 @@ namespace Start.Scripts
         // Start is called before the first frame update
         void Start()
         {
+            combatSystem = GameObject.FindGameObjectWithTag("combatSystem");
+            _combatController = combatSystem.GetComponent<CombatController>();
             _cursor = GameObject.FindGameObjectWithTag("cursor");
             _counter = 0;
             SetEnemyValues();
@@ -60,30 +63,28 @@ namespace Start.Scripts
         // Update is called once per frame
         void LateUpdate()
         {
+            _combatController.StartTurn();
             if (isEnemysTurn)
             {
                 player = GameObject.FindGameObjectWithTag("Player");
                 GetInRangeTiles();
                 var playerInRange = GetPlayerRange();
                 var playerTile = player.GetComponent<CharacterInfo>().standingOnTile;
-                OverlayTile overlayTile = playerTile;
 
                 if (!playerInRange && !_isMoving)
                 {
-
                     _path = _pathFinder.FindPath(_characterInfo.standingOnTile,
-                        overlayTile, new List<OverlayTile>());
+                        playerTile, new List<OverlayTile>());
 
                 }else if (playerInRange && !_isMoving)
                 {
                     if (_enemyType == "melee")
                     {
                         _path = _pathFinder.FindPath(_characterInfo.standingOnTile,
-                                                    overlayTile, _rangeFinderTiles);
+                                                    playerTile, _rangeFinderTiles);
                     }
                 }
-                MoveCharacter(overlayTile);
-                
+                MoveCharacter(playerTile);
             }
         }
 
@@ -97,11 +98,7 @@ namespace Start.Scripts
 
             return false;
         }
-
-        private void GetPath()
-        {
-            
-        }
+        
 
         private void MoveCharacter(OverlayTile tile)
         {
@@ -110,9 +107,17 @@ namespace Start.Scripts
                 _isMoving = true;
             }
             ResetTiles();
-            if (_path.Count > 0 && _isMoving && _counter < data.movement)
+            if (_path.Count > 0 && _isMoving && _counter <= data.movement)
             {
                 MoveAlongPath();
+            }
+            else
+            {
+                GetInRangeTiles();
+                _isMoving = false;
+                _combatController.StopTurn();
+                _counter = 0;
+                
             }
         }
 
@@ -135,13 +140,14 @@ namespace Start.Scripts
 
             
 
-            if (_path.Count == 0 &&  gameObject != null || _path.Count - data.movement == 0 && gameObject != null)
+            if ((_path.Count == 0 &&  gameObject != null) || (_path.Count - data.movement == 0 && gameObject != null))
             {
                 GetInRangeTiles();
                 _isMoving = false;
-                isEnemysTurn = false;
-                _cursor.GetComponent<PlayerController>().isPlayersTurn = true;
+                _combatController.StopTurn();
                 _counter = 0;
+                
+               
             }
         }
 

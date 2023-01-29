@@ -9,6 +9,8 @@ TagManager:
   - OverlayTile
   - GameDice
   - cursor
+  - Players
+  - combatSystem
   layers:
   - Default
   - TransparentFX
