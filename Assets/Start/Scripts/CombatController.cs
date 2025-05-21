@@ -1,174 +1,170 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
+using Start.Scripts.Dice;
+using Start.Scripts.Enemy;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Vector2 = System.Numerics.Vector2;
+
 
 namespace Start.Scripts
 {
     public class CombatController : MonoBehaviour
     {
-        private IOrderedEnumerable<KeyValuePair<int, GameObject>> _currentTurnOrder;
-        private List<GameObject> _characterList;
-        private List<GameObject> _enemyList; 
-        private List<GameObject> _playerList;
-        private Dictionary<int, GameObject> _initiatives;
-        private List<int> sortedInitiatives;
-        private int turnCount;
+        [SerializeField] private TurnOrder turnOrder;
+        [SerializeField] public GameObject dmgPrefab;
 
+        private GameObject _playerContainer;
+        private GameObject _dmgText;
+        public bool isTurn;
+        private DiceRoll _diceRoll;
+        private CharacterInfo _characterInfo;
+        private EnemyController _enemyController;
+        
+        
         private void Start()
         {
-            _currentTurnOrder = null;
-            _characterList = new List<GameObject>();
-            _enemyList = new List<GameObject>();
-            _playerList = new List<GameObject>();
-            _initiatives = new Dictionary<int, GameObject>();
-            sortedInitiatives = new List<int>();
-            turnCount = 0;
+            _playerContainer = GameObject.FindGameObjectWithTag("Players").gameObject;
+            if (gameObject.CompareTag("Player"))
+            {
+                _characterInfo = GetComponentInParent<CharacterInfo>();
+            }
+
+            if (gameObject.CompareTag("enemy"))
+            {
+                _enemyController = GetComponentInParent<EnemyController>();
+            }
+            turnOrder = GameObject.FindGameObjectWithTag("TurnController").GetComponent<TurnOrder>();
+            _diceRoll = new DiceRoll();
         }
 
         public void StartTurn()
         {
-            turnCount = 0;
-            GetCharacters();
-            GetInitiatives(_characterList);
-            GetTurnOrder();
-            
-            if (!_initiatives[sortedInitiatives[turnCount]].CompareTag("Player"))
+            if (gameObject.CompareTag("Player"))
             {
-                _initiatives[sortedInitiatives[turnCount]].GetComponent<EnemyController>().isEnemysTurn = true;
+                _characterInfo.hasAttack = true;
+                _characterInfo.hasMovement = true;
+                isTurn = true;
                 DetectOtherCharacters();
                 return;
             }
-
-            _initiatives[sortedInitiatives[turnCount]].GetComponent<PlayerController>().isPlayersTurn = true;
+            _enemyController.hasAttack = true;
+            _enemyController.hasMovement = true;
+            isTurn = true;
             DetectOtherCharacters();
-            
         }
 
         public void StopTurn()
         {
+            if (gameObject.CompareTag("Player"))
+            {
+                _characterInfo.hasAttack = false;
+                _characterInfo.hasMovement = false;
+                isTurn = false;
+                foreach (var tile in MapManager.Instance.Map.Values)
+                {
+                    tile.isBlocked = false;
+                }
+
+                turnOrder.startNextTurn = true;
+            }
+            if (!gameObject.CompareTag("enemy")) return;
+            _enemyController.hasAttack = false;
+            _enemyController.hasMovement = false;
+            isTurn = false;
             foreach (var tile in MapManager.Instance.Map.Values)
             {
-               tile.isBlocked = false;
+                tile.isBlocked = false;
             }
 
-            if (!_initiatives[sortedInitiatives[turnCount]].CompareTag("Player"))
-            {
-                _initiatives[sortedInitiatives[turnCount]].GetComponent<EnemyController>().isEnemysTurn = false;
-                turnCount++;
-                return;
-            }
-
-            _initiatives[sortedInitiatives[turnCount]].GetComponent<PlayerController>().isPlayersTurn = false;
-            turnCount++;
-            Debug.Log(turnCount);
-
+            turnOrder.startNextTurn = true;
 
         }
 
         private void DetectOtherCharacters()
         {
-            foreach (var character in _characterList)
+            foreach (var character in turnOrder.characterList)
             {
-                if (character.CompareTag("enemy"))
+
+                if (character.CompareTag("enemy") && turnOrder.currentInitiative != character.GetComponent<EnemyController>().initiative)
                 {
-                    if (!character.GetComponent<EnemyController>().isEnemysTurn)
-                    {
-                        character.GetComponent<CharacterInfo>().standingOnTile.isBlocked = true;
-                    }
-                    continue;
+                    character.GetComponent<EnemyController>().standingOnTile.isBlocked = true;
                 }
-                if (!character.GetComponent<PlayerController>().isPlayersTurn)
+
+                if (character.CompareTag("Player") && turnOrder.currentInitiative != character.GetComponent<CharacterInfo>().initiative)
                 {
                     character.GetComponent<CharacterInfo>().standingOnTile.isBlocked = true;
                 }
             }
         }
 
-        private void GetCharacters()
+        public void AttackOtherCharacter(CharacterInfo info, EnemyController other)
         {
-            _playerList = GameObject.FindGameObjectsWithTag("Player").ToList();
-            _enemyList = GameObject.FindGameObjectsWithTag("enemy").ToList();
-            foreach (var player in _playerList)
+            var hitRoll = _diceRoll.RollToHit(info);
+            if (hitRoll < other.armorClass)
             {
-                if (!_characterList.Contains(player))
-                {
-                    _characterList.Add(player);
-                }
+                _dmgText = Instantiate(dmgPrefab, other.transform);
+                _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText("Miss");
+                return;
             }
-            foreach (var enemy in _enemyList)
+            var dmg = _diceRoll.RollDmg(info);
+            TakeDamage(dmg, other);
+        }
+        
+        public void AttackOtherCharacter(EnemyController info, CharacterInfo other)
+        {
+            var hitRoll = _diceRoll.RollToHit(info);
+            if (hitRoll < other.armorClass)
             {
-                if (!_characterList.Contains(enemy))
-                {
-                    _characterList.Add(enemy);
-                }
+                _dmgText = Instantiate(dmgPrefab, other.transform);
+                _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText("Miss");
+                return;
             }
-           
+            var dmg = _diceRoll.RollDmg(info);
+            TakeDamage(dmg, other);
+            
         }
 
-        private void GetInitiatives(List<GameObject> list)
+        private void TakeDamage(int dmg, CharacterInfo other)
         {
-            foreach (var character in list)
+            if (dmg >= other.health)
             {
-                if (character.CompareTag("enemy"))
+                turnOrder.characterList.Remove(other.gameObject);
+                turnOrder._sortedInitiatives.Remove(other.initiative);
+                turnOrder._initiatives.Remove(other.initiative);
+                gameObject.GetComponent<EnemyController>().PlayerDict.Remove(other.gameObject);
+                Destroy(other.gameObject);
+                Debug.Log("player destroyed");
+                if (_playerContainer.transform.childCount == 1)
                 {
-                    if (_initiatives.ContainsKey(character.gameObject.GetComponent<EnemyController>().initiative))
-                    {
-                        var init = character.gameObject.GetComponent<EnemyController>().initiative;
-                        while (_initiatives.ContainsKey(init))
-                        {
-                            init++;
-                        }
-                        _initiatives.Add(init, character);
-                    } else
-                    {
-                        _initiatives.Add(character.gameObject.GetComponent<EnemyController>().initiative, character);
-                    }
-
-                }
-                else 
-                {
-                    if (_initiatives.ContainsKey(character.gameObject.GetComponent<CharacterInfo>().initiative))
-                    {
-                        var init = character.gameObject.GetComponent<CharacterInfo>().initiative;
-                        while (_initiatives.ContainsKey(init))
-                        {
-                            init++;
-                        }
-                        _initiatives.Add(init, character);
-                    } else
-                    {
-                        _initiatives.Add(character.gameObject.GetComponent<CharacterInfo>().initiative, character);
-                    }
-                    
-                }
-
-            }
-        }
-
-        private void GetTurnOrder()
-        {
-            sortedInitiatives= _initiatives.Keys.ToList();
-            for (int i = 0; i < sortedInitiatives.Count; i++)
-            {
-                var val = sortedInitiatives[i];
-                var flag = 0;
-                for (var j = i - 1; j >= 0 && flag != 1;)
-                {
-                    if (val < sortedInitiatives[j])
-                    {
-                        sortedInitiatives[j + 1] = sortedInitiatives[j];
-                        j--;
-                        sortedInitiatives[j + 1] = val;
-                    }
-                    else flag = 1;
+                    Debug.Log("GameOver");
+                    GameOver();
                 }
             }
-            sortedInitiatives.Reverse();
-
+            other.health -= dmg;
+            _dmgText = Instantiate(dmgPrefab, other.gameObject.transform);
+            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(dmg.ToString());
         }
+        
+        private void TakeDamage(int dmg, EnemyController other)
+        {
+            if (dmg >= other.health)
+            {
+                turnOrder.characterList.Remove(other.gameObject);
+                turnOrder._sortedInitiatives.Remove(other.initiative);
+                turnOrder._initiatives.Remove(other.initiative);
+                gameObject.GetComponent<PlayerController>().enemies.Remove(other.gameObject);
+                Destroy(other.gameObject);
+            }
+            other.health -= dmg;
+            _dmgText = Instantiate(dmgPrefab, other.gameObject.transform);
+            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(dmg.ToString());
+        }
+
+        private void GameOver()
+        {
+            SceneManager.LoadScene("GameOver");
+        }
+
     }
 }

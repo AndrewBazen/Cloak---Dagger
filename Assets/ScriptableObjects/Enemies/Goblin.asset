@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7be2fc510ad2034da6efebb0224fb0b, type: 3}
+  m_Name: Goblin
+  m_EditorClassIdentifier: 
+  bonusToHit: 2
+  armorClass: 10
+  weapon: {fileID: 11400000, guid: c52193f9e6ec640c7a87f46c5ad8a3a6, type: 2}
+  armor: {fileID: 0}
+  abilities: []
+  statType:
+  - str
+  - dex
+  - con
+  - int
+  - wis
+  - cha
+  stats: 0a0000000b0000000c0000000d0000000e0000000f000000
+  standingOnTile: {fileID: 0}
+  health: 12
+  maxHealth: 12
+  mana: 5
+  maxMana: 5
+  damage: 0
+  speed: 5
+  movement: 6
+  enemyType: Melee
+  initiative: 3
+  hasDisadvantage: 0
+  hasAdvantage: 0
+  hasMovement: 0
+  hasAttack: 0

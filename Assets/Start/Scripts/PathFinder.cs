@@ -8,13 +8,70 @@ namespace Start.Scripts
     {
         private Dictionary<Vector2Int, OverlayTile> _searchableTiles;
 
-        public List<OverlayTile> FindPath(OverlayTile start, OverlayTile end, List<OverlayTile> inRangeTiles)
+        public List<OverlayTile> FindPath(OverlayTile start, OverlayTile end, List<OverlayTile> inRangeTiles, bool isAttack)
         {
             _searchableTiles = new Dictionary<Vector2Int, OverlayTile>();
-
-            List<OverlayTile> openList = new List<OverlayTile>();
-            HashSet<OverlayTile> closedList = new HashSet<OverlayTile>();
-
+            
+            var openList = new List<OverlayTile>();
+            var closedList = new HashSet<OverlayTile>();
+            if (!isAttack)
+            {
+                if (inRangeTiles.Count > 0)
+                {
+                    foreach (var item in inRangeTiles)
+                    {
+                        _searchableTiles.Add(item.Grid2DLocation, MapManager.Instance.Map[item.Grid2DLocation]);
+                    }
+                }
+                else
+                {
+                    _searchableTiles = MapManager.Instance.Map;
+                }
+    
+                openList.Add(start);
+    
+                while (openList.Any())
+                {
+                    var currentOverlayTile = openList[0];
+    
+                    foreach (var tile in openList)
+                    {
+                        if (tile.F < currentOverlayTile.F ||
+                            tile.F == currentOverlayTile.F && tile.h < currentOverlayTile.h)
+                        {
+                            currentOverlayTile = tile;
+                        }
+                    }
+    
+                    openList.Remove(currentOverlayTile);
+                    closedList.Add(currentOverlayTile);
+    
+                    if (currentOverlayTile == end)
+                    {
+                        return GetFinishedList(start, end);
+                    }
+    
+                    foreach (var neighbor in GetNeightbourOverlayTiles(currentOverlayTile))
+                    {
+                        if ((neighbor.isBlocked && neighbor != end) || closedList.Contains(neighbor))
+                        {
+                            continue;
+                        }
+    
+                        neighbor.g = GetManhattenDistance(start, neighbor);
+                        neighbor.h = GetManhattenDistance(end, neighbor);
+    
+                        neighbor.previous = currentOverlayTile;
+    
+    
+                        if (!openList.Contains(neighbor))
+                        {
+                            openList.Add(neighbor);
+                        }
+                    }
+                }
+                return new List<OverlayTile>();
+            }
             if (inRangeTiles.Count > 0)
             {
                 foreach (var item in inRangeTiles)
@@ -50,9 +107,14 @@ namespace Start.Scripts
                     return GetFinishedList(start, end);
                 }
 
+                if (currentOverlayTile != start && currentOverlayTile.isBlocked)
+                {
+                    return new List<OverlayTile>();
+                }
+
                 foreach (var neighbor in GetNeightbourOverlayTiles(currentOverlayTile))
                 {
-                    if (neighbor.isBlocked || closedList.Contains(neighbor))
+                    if (closedList.Contains(neighbor))
                     {
                         continue;
                     }
@@ -69,13 +131,14 @@ namespace Start.Scripts
                     }
                 }
             }
+            
             return new List<OverlayTile>();
         }
-
+        
         private List<OverlayTile> GetFinishedList(OverlayTile start, OverlayTile end)
         {
-            List<OverlayTile> finishedList = new List<OverlayTile>();
-            OverlayTile currentTile = end;
+            var finishedList = new List<OverlayTile>();
+            var currentTile = end;
 
             while (currentTile != start)
             {
@@ -94,14 +157,14 @@ namespace Start.Scripts
                 tile.gridLocation.y);
         }
 
-        private List<OverlayTile> GetNeightbourOverlayTiles(OverlayTile currentOverlayTile)
+        public List<OverlayTile> GetNeightbourOverlayTiles(OverlayTile currentOverlayTile)
         {
             var map = MapManager.Instance.Map;
 
-            List<OverlayTile> neighbours = new List<OverlayTile>();
+            var neighbours = new List<OverlayTile>();
 
             //right
-            Vector2Int
+            var
                 locationToCheck = new Vector2Int
                 (
                     currentOverlayTile.gridLocation.x + 1,

@@ -50,7 +50,7 @@ namespace Start.Scripts
         cursor.transform.position = tile.transform.position;
         if (_rangeFinderTiles.Contains(tile) && !_isMoving)
         {
-          _path = _pathFinder.FindPath(_player.standingOnTile, tile, _rangeFinderTiles);
+          _path = _pathFinder.FindPath(_player.standingOnTile, tile, _rangeFinderTiles, false);
 
           foreach (var currTile in _path)
           {

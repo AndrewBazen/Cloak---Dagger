@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using UnityEditor.Timeline;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -18,7 +16,6 @@ namespace Start.Scripts
         public bool isBlocked = false;
         public GameObject overlayPrefab;
         private SpriteRenderer _overlayRend;
-
         public Sprite pathSprite;
         public OverlayTile previous;
         public Vector3Int gridLocation;
@@ -52,5 +49,29 @@ namespace Start.Scripts
             _spriteRenderer.sprite = _overlayRend.sprite;
             _spriteRenderer.color = new Color(1, 1, 1, 0);
         }
+
+        public GameObject GetPlayerOnTile()
+        {
+            var contacts = new List<Collider2D>();
+            var col = gameObject.GetComponent<PolygonCollider2D>();
+            col.GetContacts(contacts);
+            if (contacts.Count != 0)
+            {
+                var playerOnTile = contacts[0].gameObject;
+                return playerOnTile;
+            }
+
+            return null;
+        }
+
+        // private void OnTriggerEnter2D(Collider2D col)
+        // {
+        //     isBlocked = true;
+        // }
+        //
+        // private void OnTriggerExit2D(Collider2D other)
+        // {
+        //     isBlocked = false;
+        // }
     }
 }

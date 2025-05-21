@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿
+using UnityEngine;
 
 namespace Start.Scripts
 {
@@ -7,23 +8,47 @@ namespace Start.Scripts
         [SerializeField] private GameObject playerPrefab;
         [SerializeField] private GameObject playerContainer;
         private CharacterInfo _characterInfo;
+        [SerializeField] private int totalPlayers;
+
 
         // Update is called once per frame
-        void Update()
+        private void LateUpdate()
         {
-            if (_characterInfo == null)
+            if (playerContainer.transform.childCount == 0)
             {
-                SpawnCharacter();
-                PositionCharacterOnLine(MapManager.Instance.playerSpawnTile);
+                for (var i = 0; i < totalPlayers; i++)
+                {
+                    SpawnCharacters(MapManager.Instance.playerSpawnTiles[i]);
+                }
+                
             }
         }
-        
-        private void SpawnCharacter()
+
+        private void SpawnCharacters(OverlayTile spawnTile)
         {
-            _characterInfo = Instantiate(playerPrefab, playerContainer.transform).GetComponent<CharacterInfo>();
-            PositionCharacterOnLine(MapManager.Instance.playerSpawnTile);
+            if (playerPrefab == null || playerContainer == null)
+            {
+                Debug.LogError("PlayerPrefab or PlayerContainer is not assigned in the inspector.");
+                return;
+            }
+
+            var instantiatedPlayer = Instantiate(playerPrefab, playerContainer.transform);
+            if (instantiatedPlayer == null)
+            {
+                Debug.LogError("Failed to instantiate playerPrefab.");
+                return;
+            }
+
+            _characterInfo = instantiatedPlayer.GetComponent<CharacterInfo>();
+            if (_characterInfo == null)
+            {
+                Debug.LogError("CharacterInfo component is missing on the instantiated playerPrefab.");
+                return;
+            }
+
+            PositionCharacterOnLine(spawnTile);
         }
-        
+           
         private void PositionCharacterOnLine(OverlayTile tile)
         {
             var tilePos = tile.transform.position;

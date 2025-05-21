@@ -22,7 +22,13 @@ namespace Start.Scripts
 
                 foreach (var item in tilesForPreviousStep)
                 {
-                    surroundingTiles.AddRange(MapManager.Instance.GetSurroundingTiles
+                    if (range > 1)
+                    {
+                        surroundingTiles.AddRange(MapManager.Instance.GetSurroundingTiles
+                            (new Vector2Int(item.gridLocation.x, item.gridLocation.y)));
+                        continue;
+                    }
+                    surroundingTiles.AddRange(MapManager.Instance.GetAllSurroundingTiles
                         (new Vector2Int(item.gridLocation.x, item.gridLocation.y)));
                 }
 

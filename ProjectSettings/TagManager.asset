@@ -11,6 +11,14 @@ TagManager:
   - cursor
   - Players
   - combatSystem
+  - TurnController
+  - Enemies
+  - playerSpawn
+  - inventory
+  - TurnPanel
+  - TurnPanelButton
+  - NewPartyMember
+  - StatDropDown
   layers:
   - Default
   - TransparentFX

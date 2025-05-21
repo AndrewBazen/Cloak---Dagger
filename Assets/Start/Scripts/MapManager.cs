@@ -14,20 +14,21 @@ namespace Start.Scripts
         private static MapManager _instance;
         public static MapManager Instance => _instance;
 
-        public GameObject playerSpawnPoint;
+        private List<GameObject> _playerSpawnPoints;
         private List<GameObject> _enemySpawnPoints;
         public List<OverlayTile> enemySpawnTiles;
-        public OverlayTile playerSpawnTile;
+        public List<OverlayTile> playerSpawnTiles;
         public GameObject overlayPrefab;
         public GameObject overlayContainer;
         public Dictionary<Vector2Int, OverlayTile> Map;
         public bool ignoreBottomTiles;
+        public bool gameOver;
 
         private void Awake()
         {
             if (_instance != null && _instance != this)
             {
-                Destroy(this.gameObject);
+                Destroy(gameObject);
             } else
             {
                 _instance = this;
@@ -37,6 +38,7 @@ namespace Start.Scripts
 
         void Start()
         {
+            gameOver = false;
             _enemySpawnPoints = GameObject.FindGameObjectsWithTag("enemySpawn").ToList();
             var enemySpawnLocations = new List<Vector3>();
             foreach (var esp in _enemySpawnPoints)
@@ -48,8 +50,16 @@ namespace Start.Scripts
                 
             }
 
-            var playerSpawnPointLocation = playerSpawnPoint.transform.position;
-            var tileMaps = gameObject.transform.GetComponentsInChildren<Tilemap>().OrderByDescending(x => x.GetComponent<TilemapRenderer>().sortingOrder);
+            _playerSpawnPoints = GameObject.FindGameObjectsWithTag("playerSpawn").ToList();
+            var playerSpawnLocations = new List<Vector3>();
+            foreach (var psp in _playerSpawnPoints)
+            {
+                var playerLocation = psp.transform.position;
+                playerSpawnLocations.Add(playerLocation);
+            }
+            var tileMaps =
+                gameObject.transform.GetComponentsInChildren<Tilemap>().OrderByDescending(x =>
+                    x.GetComponent<TilemapRenderer>().sortingOrder);
             Map = new Dictionary<Vector2Int, OverlayTile>();
 
             foreach (var tm in tileMaps)
@@ -78,17 +88,22 @@ namespace Start.Scripts
                                         tm.GetComponent<TilemapRenderer>().sortingOrder;
                                     overlayTile.gameObject.GetComponent<OverlayTile>().gridLocation = 
                                         new Vector3Int(x, y, z);
-                                    Vector3 tilePosition = overlayTile.transform.position; 
-                                    if (Mathf.Abs(tilePosition.x - playerSpawnPointLocation.x) < 0.3f && 
-                                        Mathf.Abs(tilePosition.y - playerSpawnPointLocation.y) < 0.3f)
+                                    Vector3 tilePosition = overlayTile.transform.position;
+                                    foreach (var psl in playerSpawnLocations)
                                     {
-                                        overlayTile.gameObject.GetComponent<OverlayTile>().isPlayerSpawnTile = true;
-                                        playerSpawnTile = overlayTile.gameObject.GetComponent<OverlayTile>();
+                                        if (Mathf.Abs(tilePosition.x - psl.x) < 0.2f && 
+                                            Mathf.Abs(tilePosition.y - psl.y) < 0.2f)
+                                        {
+                                            overlayTile.gameObject.GetComponent<OverlayTile>().isPlayerSpawnTile = true;
+                                            playerSpawnTiles.Add(overlayTile.gameObject.GetComponent<OverlayTile>());
+                                        }
                                     }
+                                    
 
                                     foreach (var esl in enemySpawnLocations)
                                     {
-                                        if (Mathf.Abs(tilePosition.x - esl.x) < 0.2f && Mathf.Abs(tilePosition.y - esl.y) < 0.2f)
+                                        if (Mathf.Abs(tilePosition.x - esl.x) < 0.2f && Mathf.Abs(tilePosition.y - 
+                                                esl.y) < 0.2f)
                                         {
                                             overlayTile.gameObject.GetComponent<OverlayTile>().isEnemySpawnTile = true;
                                             enemySpawnTiles.Add(overlayTile.gameObject.GetComponent<OverlayTile>());
@@ -109,7 +124,7 @@ namespace Start.Scripts
             var surroundingTiles = new List<OverlayTile>();
         
         
-            Vector2Int tileToCheck = new Vector2Int(originTile.x + 1, originTile.y);
+            var tileToCheck = new Vector2Int(originTile.x + 1, originTile.y);
             if (Map.ContainsKey(tileToCheck))
             {
                 if (Mathf.Abs(Map[tileToCheck].transform.position.z - Map[originTile].transform.position.z) <= 1 &&
@@ -144,7 +159,77 @@ namespace Start.Scripts
             return surroundingTiles;
         }
 
+        public List<OverlayTile> GetAllSurroundingTiles(Vector2Int originTile)
+        {
+            var surroundingTiles = new List<OverlayTile>();
         
+        
+            var tileToCheck = new Vector2Int(originTile.x + 1, originTile.y);
+            if (Map.ContainsKey(tileToCheck))
+            {
+                if (Mathf.Abs(Map[tileToCheck].transform.position.z - Map[originTile].transform.position.z) <= 1 &&
+                    !surroundingTiles.Contains(Map[tileToCheck]))
+                    surroundingTiles.Add(Map[tileToCheck]);
+            }
+        
+            tileToCheck = new Vector2Int(originTile.x - 1, originTile.y);
+            if (Map.ContainsKey(tileToCheck))
+            {
+                if (Mathf.Abs(Map[tileToCheck].transform.position.z - Map[originTile].transform.position.z) <= 1 &&
+                    !surroundingTiles.Contains(Map[tileToCheck]))
+                    surroundingTiles.Add(Map[tileToCheck]);
+            }
+        
+            tileToCheck = new Vector2Int(originTile.x, originTile.y + 1);
+            if (Map.ContainsKey(tileToCheck))
+            {
+                if (Mathf.Abs(Map[tileToCheck].transform.position.z - Map[originTile].transform.position.z) <= 1 &&
+                    !surroundingTiles.Contains(Map[tileToCheck]))
+                    surroundingTiles.Add(Map[tileToCheck]);
+            }
+        
+            tileToCheck = new Vector2Int(originTile.x, originTile.y - 1);
+            if (Map.ContainsKey(tileToCheck))
+            {
+                if (Mathf.Abs(Map[tileToCheck].transform.position.z - Map[originTile].transform.position.z) <= 1 &&
+                    !surroundingTiles.Contains(Map[tileToCheck]))
+                    surroundingTiles.Add(Map[tileToCheck]);
+            }
+            
+            tileToCheck = new Vector2Int(originTile.x + 1, originTile.y + 1);
+            if (Map.ContainsKey(tileToCheck))
+            {
+                if (Mathf.Abs(Map[tileToCheck].transform.position.z - Map[originTile].transform.position.z) <= 1 &&
+                    !surroundingTiles.Contains(Map[tileToCheck]))
+                    surroundingTiles.Add(Map[tileToCheck]);
+            }
+        
+            tileToCheck = new Vector2Int(originTile.x - 1, originTile.y + 1);
+            if (Map.ContainsKey(tileToCheck))
+            {
+                if (Mathf.Abs(Map[tileToCheck].transform.position.z - Map[originTile].transform.position.z) <= 1 &&
+                    !surroundingTiles.Contains(Map[tileToCheck]))
+                    surroundingTiles.Add(Map[tileToCheck]);
+            }
+        
+            tileToCheck = new Vector2Int(originTile.x + 1, originTile.y - 1);
+            if (Map.ContainsKey(tileToCheck))
+            {
+                if (Mathf.Abs(Map[tileToCheck].transform.position.z - Map[originTile].transform.position.z) <= 1 &&
+                    !surroundingTiles.Contains(Map[tileToCheck]))
+                    surroundingTiles.Add(Map[tileToCheck]);
+            }
+        
+            tileToCheck = new Vector2Int(originTile.x - 1, originTile.y - 1);
+            if (Map.ContainsKey(tileToCheck))
+            {
+                if (Mathf.Abs(Map[tileToCheck].transform.position.z - Map[originTile].transform.position.z) <= 1 &&
+                    !surroundingTiles.Contains(Map[tileToCheck]))
+                    surroundingTiles.Add(Map[tileToCheck]);
+            }
+            
+            return surroundingTiles;
+        }
     }
 }
 

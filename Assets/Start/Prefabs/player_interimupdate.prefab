@@ -10,8 +10,11 @@ GameObject:
   m_Component:
   - component: {fileID: 7783610298921090742}
   - component: {fileID: 3490683629037706276}
-  - component: {fileID: 8646172548935484116}
   - component: {fileID: 1665346466057649150}
+  - component: {fileID: -2609290544258105892}
+  - component: {fileID: 1030812044070375092}
+  - component: {fileID: -401402090921198876}
+  - component: {fileID: 8234722512387591774}
   m_Layer: 0
   m_Name: player_interimupdate
   m_TagString: Player
@@ -86,20 +89,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 1
---- !u!114 &8646172548935484116
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1377899735657505207}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 829708fa1fbc4da1954778745e993e9c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  standingOnTile: {fileID: 0}
-  initiative: 20
 --- !u!114 &1665346466057649150
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -115,8 +104,88 @@ MonoBehaviour:
   cursor: {fileID: 0}
   speed: 4
   enemies: []
-  playerPrefab: {fileID: 1377899735657505207}
   player: {fileID: 0}
-  isPlayersTurn: 0
   playerContainer: {fileID: 0}
+  enemyContainer: {fileID: 0}
+  inventory: {fileID: 0}
   playerMovement: 6
+--- !u!114 &-2609290544258105892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377899735657505207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a6dec0e10d244a358d63ac8193c8420, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  turnOrder: {fileID: 0}
+  dmgPrefab: {fileID: 8527405243883120828, guid: d09c4ccdf631ae94d87b7d6ae69a1459, type: 3}
+  isTurn: 0
+--- !u!114 &1030812044070375092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377899735657505207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 829708fa1fbc4da1954778745e993e9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Spells: []
+  inventory: {fileID: 0}
+  health: 20
+  maxHealth: 30
+  mana: 0
+  bonusToHit: 0
+  armorClass: 0
+  weapon: {fileID: 11400000, guid: c52193f9e6ec640c7a87f46c5ad8a3a6, type: 2}
+  armor: {fileID: 0}
+  abilities: []
+  hasDisadvantage: 0
+  hasAdvantage: 0
+  hasMovement: 0
+  hasAttack: 0
+  standingOnTile: {fileID: 0}
+  initiative: 0
+--- !u!50 &-401402090921198876
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377899735657505207}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 4
+--- !u!58 &8234722512387591774
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377899735657505207}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0.033771884}
+  serializedVersion: 2
+  m_Radius: 0.033771884

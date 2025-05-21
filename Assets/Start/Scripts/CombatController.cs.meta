@@ -3,7 +3,9 @@ guid: 0a6dec0e10d244a358d63ac8193c8420
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - turnOrder: {instanceID: 0}
+  - dmgPrefab: {fileID: 8527405243883120828, guid: d09c4ccdf631ae94d87b7d6ae69a1459, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
