@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Start.Scripts.Game;
 using Start.Scripts.Inventory;
 using UnityEngine;
 using Random = System.Random;
 
-
 namespace Start.Scripts.Enemy
 {
-    public class EnemyController : MonoBehaviour
+    public class EnemyController : MonoBehaviour, IGameManagerAware
     {
         [SerializeField] private float speed;
         [SerializeField] public EnemyData data;
@@ -50,10 +50,21 @@ namespace Start.Scripts.Enemy
         private bool _isMoving;
         private bool _strategyFound;
 
+        // GameManager integration
+        private GameManager _gameManager;
+        private IAIStrategy _aiStrategy;
+
         // runs when the object becomes awake
         private void Awake()
         {
             _combatController = GetComponent<CombatController>();
+            _pathFinder = new PathFinder();
+            _rangeFinder = new RangeFinder();
+            _path = new List<OverlayTile>();
+            _rangeFinderTiles = new List<OverlayTile>();
+            _statBonuses = new Dictionary<string, int>();
+            _isMoving = false;
+            _strategyFound = false;
         }
 
         // Start is called before the first frame update
@@ -62,7 +73,6 @@ namespace Start.Scripts.Enemy
             enemyContainer = GameObject.FindGameObjectWithTag("Enemies");
             playerContainer = GameObject.FindGameObjectWithTag("Players").gameObject;
             PlayerDict = new Dictionary<GameObject, CharacterInfo>();
-            _statBonuses = new Dictionary<string, int>();
             SetEnemyValues();
             _strategy = new Strategy();
             _allies = new List<GameObject>();
@@ -89,7 +99,7 @@ namespace Start.Scripts.Enemy
                 // gets player object, range, and tile.
                 if (!_strategyFound)
                 {
-                    _strategy = DetermineBestStrategy();
+                    _strategy = _aiStrategy.EvaluateStrategy(this, _gameManager);
                     _strategyFound = true;
                 }
                 if (hasMovement && _strategyFound)
@@ -262,7 +272,8 @@ namespace Start.Scripts.Enemy
                                         tempStrategy.TargetTile = tile;
                                         tempStrategy.CurrentTile = standingOnTile;
                                         tempStrategy.PlayerToAttack = bestPlayer;
-                                        if (tempStrategy.StrategyValue > strategy.StrategyValue)
+                                        if (tempStrategy.StrategyValue >
+                                            strategy.StrategyValue)
                                         {
                                             strategy = new Strategy(tempStrategy.TargetTile,
                                                 tempStrategy.CurrentTile, tempStrategy.PlayerToAttack, tempStrategy.AbilityToUse, tempStrategy.StrategyAttackValue,
@@ -1365,6 +1376,95 @@ namespace Start.Scripts.Enemy
         {
             var rand = new Random();
             initiative = rand.Next(1, 20);
+        }
+
+        public void Initialize(GameManager gameManager)
+        {
+            _gameManager = gameManager;
+            
+            // Subscribe to events
+            _gameManager.OnCombatStarted += OnCombatStarted;
+            _gameManager.OnCombatEnded += OnCombatEnded;
+            
+            // Set up AI strategy based on enemy type
+            _aiStrategy = AIStrategyFactory.GetStrategy(enemyType);
+            
+            // Initialize from data if available
+            if (data != null)
+            {
+                SetEnemyValues();
+            }
+        }
+        
+        public void OnGameStateChanged(GameManager.GameState newState)
+        {
+            // Handle game state changes if needed
+            switch (newState)
+            {
+                case GameManager.GameState.Combat:
+                    // Reset state for new combat
+                    _strategyFound = false;
+                    break;
+                
+                case GameManager.GameState.Exploration:
+                    // Reset movement and attack flags
+                    hasMovement = true;
+                    hasAttack = true;
+                    break;
+            }
+        }
+        
+        private void OnDestroy()
+        {
+            // Unsubscribe from events to prevent memory leaks
+            if (_gameManager != null)
+            {
+                _gameManager.OnCombatStarted -= OnCombatStarted;
+                _gameManager.OnCombatEnded -= OnCombatEnded;
+            }
+        }
+        
+        private void OnCombatStarted()
+        {
+            // Reset for combat
+            hasMovement = true;
+            hasAttack = true;
+            _strategyFound = false;
+        }
+        
+        private void OnCombatEnded()
+        {
+            // Reset after combat
+            _path.Clear();
+            _isMoving = false;
+            _strategyFound = false;
+        }
+        
+        // Provides access to stat bonuses for strategies
+        public int GetStatBonus(string statName)
+        {
+            return _statBonuses.ContainsKey(statName) ? _statBonuses[statName] : 0;
+        }
+        
+        // Utility method to get players in range for strategies
+        public List<CharacterInfo> GetPartyMembersInRange(OverlayTile tile, int range)
+        {
+            var tilesInRange = _rangeFinder.GetTilesInRange(tile.Grid2DLocation, range);
+            var players = new List<CharacterInfo>();
+            
+            foreach (var t in tilesInRange)
+            {
+                if (CheckIfTileIsPlayerTile(t))
+                {
+                    var player = t.GetPlayerOnTile();
+                    if (player && PlayerDict.ContainsKey(player))
+                    {
+                        players.Add(PlayerDict[player]);
+                    }
+                }
+            }
+            
+            return players;
         }
     }
 }

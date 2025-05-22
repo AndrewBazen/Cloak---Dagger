@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Start.Scripts.Game
 {
@@ -53,6 +54,18 @@ namespace Start.Scripts.Game
         public event Action OnSubmitParty;
         #endregion
 
+        #region Turn Events
+        public event Action<Action, Action> OnTurnStart;
+        public event Action<Action, Action> OnTurnEnd;
+        public event Action<List<GameObject>> OnEnemiesChanged;
+        public event Action<InventoryHolder> OnInventoryUpdate;
+        #endregion
+
+        public void BroadcastMessage()
+        {
+            // Method to broadcast messages or events
+        }
+
         private void Update()
         {
             
@@ -60,7 +73,7 @@ namespace Start.Scripts.Game
 
         public void LoadNewScene(string sceneName) {
             OnLoadNewScene?.Invoke();
-            GameManager.LoadScene(sceneName);
+            SceneManager.LoadScene(sceneName);
         }
 
         public void LoadEvent()

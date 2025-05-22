@@ -90,7 +90,7 @@ namespace Start.Scripts.Dice
                 case "D20":
                     for (int i = 0; i < numberOfDice; i++)
                     {
-                        var roll = _random.Next(1, 20);
+                        var roll = _random.Next(1, 21);
                         rolls.Add(roll);
                         rollTotal += roll;
                     }
@@ -99,7 +99,7 @@ namespace Start.Scripts.Dice
                 case "D12":
                     for (int i = 0; i < numberOfDice; i++)
                     {
-                        var roll = _random.Next(1, 12);
+                        var roll = _random.Next(1, 13);
                         rolls.Add(roll);
                         rollTotal += roll;
                     }
@@ -108,7 +108,7 @@ namespace Start.Scripts.Dice
                 case "D10":
                     for (int i = 0; i < numberOfDice; i++)
                     {
-                        var roll = _random.Next(1, 10);
+                        var roll = _random.Next(1, 11);
                         rolls.Add(roll);
                         rollTotal += roll;
                     }
@@ -117,7 +117,7 @@ namespace Start.Scripts.Dice
                 case "D8":
                     for (int i = 0; i < numberOfDice; i++)
                     {
-                        var roll = _random.Next(1, 8);
+                        var roll = _random.Next(1, 9);
                         rolls.Add(roll);
                         rollTotal += roll;
                     }
@@ -126,7 +126,7 @@ namespace Start.Scripts.Dice
                 case "D6":
                     for (int i = 0; i < numberOfDice; i++)
                     {
-                        var roll = _random.Next(1, 6);
+                        var roll = _random.Next(1, 7);
                         rolls.Add(roll);
                         rollTotal += roll;
                     }
@@ -135,7 +135,7 @@ namespace Start.Scripts.Dice
                 case "D4":
                     for (int i = 0; i < numberOfDice; i++)
                     {
-                        var roll = _random.Next(1, 4);
+                        var roll = _random.Next(1, 5);
                         rolls.Add(roll);
                         rollTotal += roll;
                     }
