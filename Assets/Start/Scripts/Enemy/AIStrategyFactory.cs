@@ -1,53 +1,89 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Start.Scripts.Enemy
 {
     /// <summary>
-    /// Factory class for creating AI strategies based on enemy type.
-    /// This centralizes strategy creation and allows for easier extensibility.
+    /// Factory and registry for managing AI strategy types.
     /// </summary>
-    public class AIStrategyFactory
+    public static class AIStrategyFactory
     {
-        // Cache of strategies to avoid creating new objects each time
-        private static readonly Dictionary<string, IAIStrategy> StrategyCache = new Dictionary<string, IAIStrategy>();
-        
+        private static readonly Dictionary<string, Func<IAIStrategy>> Registry = new();
+        private static readonly Dictionary<string, IAIStrategy> Cache = new();
+
+        // Configurable fallback strategy
+        private static string _fallbackStrategyKey = "melee";
+
+        static AIStrategyFactory()
+        {
+            // Load strategies from configuration or register defaults
+            RegisterDefaults();
+        }
+
+        private static void RegisterDefaults()
+        {
+            var defaultStrategies = new Dictionary<string, Func<IAIStrategy>>
+            {
+                {"melee", () => new MeleeAIStrategy()},
+                {"ranged", () => new RangedAIStrategy()},
+                {"versatile", () => new VersatileAIStrategy()},
+                {"magic", () => new MagicAIStrategy()}
+            };
+
+            foreach (var kvp in defaultStrategies)
+            {
+                Register(kvp.Key, kvp.Value);
+            }
+        }
+
         /// <summary>
-        /// Get the appropriate AI strategy for a specific enemy type.
+        /// Registers a new strategy by type name.
         /// </summary>
-        /// <param name="enemyType">The type of enemy (Melee, Ranged, etc.)</param>
-        /// <returns>An AI strategy appropriate for the enemy type</returns>
+        public static void Register(string enemyType, Func<IAIStrategy> factory)
+        {
+            var key = enemyType.ToLower();
+            if (!Registry.ContainsKey(key))
+            {
+                Registry[key] = factory;
+            }
+        }
+
+        /// <summary>
+        /// Sets the default fallback strategy to use if a type is unknown.
+        /// </summary>
+        public static void SetFallbackStrategy(string fallbackKey)
+        {
+            _fallbackStrategyKey = fallbackKey.ToLower();
+        }
+
+        /// <summary>
+        /// Gets a strategy instance for a given enemy type.
+        /// </summary>
         public static IAIStrategy GetStrategy(string enemyType)
         {
-            // Check if we already have a cached instance of this strategy
-            if (StrategyCache.ContainsKey(enemyType))
+            var key = enemyType.ToLower();
+
+            if (Cache.TryGetValue(key, out var strategy))
+                return strategy;
+
+            if (Registry.TryGetValue(key, out var factory))
             {
-                return StrategyCache[enemyType];
+                strategy = factory();
+                Cache[key] = strategy;
+                return strategy;
             }
-            
-            // Create a new strategy based on enemy type
-            IAIStrategy strategy = enemyType.ToLower() switch
-            {
-                "melee" => new MeleeAIStrategy(),
-                "ranged" => new RangedAIStrategy(),
-                "versatile" => new VersatileAIStrategy(), // You would need to implement this
-                "magic" => new MagicAIStrategy(),         // You would need to implement this
-                _ => new MeleeAIStrategy()                // Default to melee if type is unknown
-            };
-            
-            // Cache the strategy for future use
-            StrategyCache[enemyType] = strategy;
-            
-            return strategy;
+
+            Debug.LogWarning($"Unknown AI strategy type: {enemyType}. Defaulting to {_fallbackStrategyKey}.");
+            return GetStrategy(_fallbackStrategyKey);
         }
-        
+
         /// <summary>
-        /// Clear the strategy cache.
-        /// Useful when changing scenes or when strategies need to be recreated.
+        /// Clears all cached strategies.
         /// </summary>
         public static void ClearCache()
         {
-            StrategyCache.Clear();
+            Cache.Clear();
         }
     }
-} 
+}

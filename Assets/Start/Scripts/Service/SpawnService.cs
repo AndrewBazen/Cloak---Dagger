@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Assets.Start.Scripts
+namespace Start.Scripts.Service
 {
     public class SpawnService
     {

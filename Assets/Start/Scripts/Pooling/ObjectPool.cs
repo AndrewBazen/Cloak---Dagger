@@ -27,6 +27,8 @@ namespace Start.Scripts.Pooling
         // Parent transform to organize hierarchy
         private readonly Transform _parent;
 
+        public IObjectPool<T> Pool => _pool;
+
         // Creates a new object pool with the specified prefab
         public ObjectPool(T prefab, Transform parent = null, int defaultCapacity = DefaultCapacity, int maxSize = MaxSize, bool collectionCheck = true)
         {
@@ -107,9 +109,6 @@ namespace Start.Scripts.Pooling
         {
             Object.Destroy(pooledObject.gameObject);
         }
-        
-        // Allow explicit type casting to IObjectPool<T>
-        public static implicit operator IObjectPool<T>(ObjectPool<T> pool) => pool._pool;
         
         // Release an object via the PoolableObject component
         public void Release(PoolableObject poolableObject)

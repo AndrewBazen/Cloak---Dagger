@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Start.Scripts.Character;
+using CharacterInfo = Start.Scripts.Character.CharacterInfo;
 using Start.Scripts.Dice;
 using Start.Scripts.Enemy;
 using Start.Scripts.Game;

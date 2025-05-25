@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Start.Scripts.Enemy;
+using CharacterInfo = Start.Scripts.Character.CharacterInfo;
 
 namespace Start.Scripts.Party
 {

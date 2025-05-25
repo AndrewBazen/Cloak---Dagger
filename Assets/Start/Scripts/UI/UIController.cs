@@ -1,62 +1,44 @@
-using System;
-using Start.Scripts.Game;
-using Start.Scripts.Party;
-using UnityEditor.UI;
+using System.Collections.Generic;
+using Start.Scripts.Character;
+using Start.Scripts.Inventory;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
 
 namespace Start.Scripts.UI
 {
     public class UIController : MonoBehaviour
     {
-
-        [SerializeField] private GameObject escapeMenu;
-
-        private void Start()
-        {
-            GameEvents.current.OnEscPressed += OpenEscapeMenu;
-            GameEvents.current.OnEscPressed += Resume;
-            GameEvents.current.OnEscPressed += Pause;
-        }
+        [SerializeField] private StatDisplay statDisplay;
+        [SerializeField] private InventoryDisplay inventoryDisplay;
 
         private void Awake()
         {
-            DisplayPartyStats();
+            GameEvents.current.OnCharacterStatsChanged += UpdateStats;
+            GameEvents.current.OnCharacterInventoryChanged += UpdateInventory;
+            GameManager.Instance.OnPartyUpdated += UpdatePartyUI;
         }
 
-        private void OpenEscapeMenu()
+        private void OnDestroy()
         {
-            if (SceneManager.GetActiveScene().name == "Main")
-            {
-                escapeMenu.SetActive(!escapeMenu.activeSelf);
-            }
+            GameEvents.current.OnCharacterStatsChanged -= UpdateStats;
+            GameEvents.current.OnCharacterInventoryChanged -= UpdateInventory;
+            if (GameManager.Instance != null)
+                GameManager.Instance.OnPartyUpdated -= UpdatePartyUI;
         }
 
-        private void Resume()
+        private void UpdateStats(CharacterInfoData data)
         {
-            if (!escapeMenu.activeSelf)
-            {
-                Time.timeScale = 1f;
-            }
+            statDisplay?.UpdateStats(data);
         }
 
-        private void Pause()
+        private void UpdateInventory(InventoryHolder inventory)
         {
-            if (escapeMenu.activeSelf)
-            {
-                Time.timeScale = 0f;
-            }
+            inventoryDisplay?.UpdateInventory(inventory);
         }
-        
-        public void DisplayPartyStats()
+
+        private void UpdatePartyUI(List<CharacterInfoData> party)
         {
-            foreach (var player in PartyManager.Instance.party)
-            {
-                player.statDisplay = Instantiate(PartyManager.Instance.statDisplayPrefab, PartyManager.Instance.statDisplayContainer.transform).GetComponent<StatDisplay>();
-                player.statDisplay.UpdateStatDisplay(player);
-                player.statDisplay.UpdateModifiers(player);
-            }
+            // TODO: Update party portrait panel, turn order UI, etc.
         }
     }
 }
+

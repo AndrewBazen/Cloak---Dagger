@@ -20,5 +20,17 @@ namespace Start.Scripts.Inventory
         [TextArea(4, 4)] public string description;
         public Sprite icon;
         public int maxStackSize;
+
+        // ✨ Optional AI behavior hints for enemy combat logic
+        public WeaponAIHints aiHints;
+    }
+
+    [Serializable]
+    public class WeaponAIHints
+    {
+        public int preferredRange = 1;
+        public bool prefersCover = false;
+        public bool avoidsMelee = false;
+        public bool flankPriority = false;
     }
 }

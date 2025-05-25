@@ -3,6 +3,7 @@ using Start.Scripts.Character;
 using Start.Scripts.Enemy;
 using Start.Scripts.Game;
 using UnityEngine;
+using CharacterInfo = Start.Scripts.Character.CharacterInfo;
 
 namespace Start.Scripts.Combat
 {

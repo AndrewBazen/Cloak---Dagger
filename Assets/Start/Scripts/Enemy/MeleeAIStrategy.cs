@@ -69,6 +69,19 @@ namespace Start.Scripts.Enemy
                 .ThenBy(p => p.armorClass)
                 .FirstOrDefault();
         }
+
+        private void WeaponBehavior() {
+          var weapon = ItemDatabase.Instance.GetItem(enemy.data.weaponId);
+          if (weapon != null && weapon.aiHints != null)
+          {
+              if (weapon.aiHints.prefersCover)
+                  SeekCover();
+
+              if (weapon.aiHints.avoidsMelee)
+                  AvoidCloseQuarters();
+          }
+
+        }
         
         /// <summary>
         /// Calculates how valuable attacking this player would be.

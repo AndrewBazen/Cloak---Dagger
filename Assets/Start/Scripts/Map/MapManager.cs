@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using CharacterInfo = Start.Scripts.Character.CharacterInfo;
+using UnityEngine.Tilemaps;
 
 namespace Start.Scripts.Map
 {
