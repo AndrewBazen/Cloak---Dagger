@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Start.Scripts.Game;
 using Start.Scripts.Inventory;
+using Start.Scripts.Enemy.Strategy;
 using UnityEngine;
 using Start.Scripts.Combat;
 using Random = System.Random;
@@ -38,47 +39,37 @@ namespace Start.Scripts.Enemy
         private const float InitialMovementValue = 20f;
         private List<GameObject> _allies;
         private CombatController _combatController;
-        private PathFinder _pathFinder;
-        private RangeFinder _rangeFinder;
         private List<OverlayTile> _path;
 
         private List<OverlayTile> _rangeFinderTiles;    
         private List<OverlayTile> _rangeTileDistances;
-        public Dictionary<GameObject, CharacterInfo> PlayerDict;
         private Dictionary<string, int> _statBonuses;
         private int _spellSlotsAvailable;
         private Strategy _strategy;
-        private bool _isMoving;
-        private bool _strategyFound;
+        private bool _isMoving = false;
+        private bool _strategyFound = false;
 
         // GameManager integration
         private GameManager _gameManager;
+        private JobSystemPathFinder _pathFinder;
+        private EnemyManager _enemyManager;
         private IAIStrategy _aiStrategy;
 
         // runs when the object becomes awake
         private void Awake()
         {
             _combatController = GetComponent<CombatController>();
-            _pathFinder = new PathFinder();
-            _rangeFinder = new RangeFinder();
-            _path = new List<OverlayTile>();
-            _rangeFinderTiles = new List<OverlayTile>();
             _statBonuses = new Dictionary<string, int>();
-            _isMoving = false;
-            _strategyFound = false;
         }
 
         // Start is called before the first frame update
         private void Start()
         {
-            enemyContainer = GameObject.FindGameObjectWithTag("Enemies");
-            playerContainer = GameObject.FindGameObjectWithTag("Players").gameObject;
-            PlayerDict = new Dictionary<GameObject, CharacterInfo>();
+            _gameManager = GameManager.Instance;
+            _pathFinder = GameManager.Instance.JobSystemPathFinder;
             SetEnemyValues();
             _strategy = new Strategy();
-            _allies = new List<GameObject>();
-            _pathFinder = new PathFinder();
-            _rangeFinder = new RangeFinder();
+            _allies = EnemyManager;
             _path = new List<OverlayTile>();
             _isMoving = false;
             _rangeFinderTiles = new List<OverlayTile>();
@@ -88,10 +79,6 @@ namespace Start.Scripts.Enemy
         // Update is called once per frame
         void Update()
         {
-            if (PlayerDict.Count == 0)
-                GetPlayers();
-            if (_allies.Count == 0)
-                GetAllies();
             // checks if it is the enemy's turn.
             if (_combatController.isTurn)
             {

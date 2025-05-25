@@ -1,4 +1,0 @@
-repository "Cloak & Dagger@GuildedToast@cloud"
-  path "/"
-    smartbranch "/main"     
-     

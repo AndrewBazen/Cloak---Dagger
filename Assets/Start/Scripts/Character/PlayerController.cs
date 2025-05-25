@@ -6,8 +6,8 @@ using Start.Scripts.Enemy;
 using Start.Scripts.Game;
 using Start.Scripts.Inventory;
 using Start.Scripts.UI;
-using Start.Scripts.Map;
 using Start.Scripts.Combat;
+using System.Linq;
 
 namespace Start.Scripts.Character
 {
@@ -19,9 +19,37 @@ namespace Start.Scripts.Character
         public GameObject PlayerContainer => playerContainer;
         public GameObject EnemyContainer => enemyContainer;
         public GameObject InventoryContainer => inventoryContainer;
-        public List<GameObject> Enemies {
+        public int Initiative
+        {
+            get => initiative;
+            set
+            {
+                initiative = value;
+                OnPropertyChanged(nameof(Initiative));
+            }
+        }
+        public List<GameObject> Enemies
+        {
             get => _enemies;
             set => _enemies = value;
+        }
+        public OverlayTile StandingOnTile
+        {
+            get => standingOnTile;
+            set
+            {
+                standingOnTile = value;
+                OnPropertyChanged(nameof(StandingOnTile));
+            }
+        }
+        public int CurrentHealth
+        {
+            get => currentHealth;
+            set
+            {
+                currentHealth = value;
+                OnPropertyChanged(nameof(CurrentHealth));
+            }
         }
 
         [SerializeField] private GameObject playerContainer;
@@ -49,8 +77,6 @@ namespace Start.Scripts.Character
         private bool _isMoving;
 
         private CombatController _combatController;
-        private PathFinder _pathFinder;
-        private RangeFinder _rangeFinder;
         private static Camera _camera;
         private GameManager _gameManager;
 
@@ -61,10 +87,14 @@ namespace Start.Scripts.Character
             // WARNING: Unity does not guarantee constructor execution like regular C# classes
         }
 
+        void IGameManagerAware.Initialize(GameManager gameManager)
+        {
+            throw new System.NotImplementedException();
+        }
+
+
         private void Awake()
         {
-            _pathFinder = new PathFinder();
-            _rangeFinder = new RangeFinder();
             _camera = Camera.main;
             _enemies = new List<GameObject>();
 
@@ -74,7 +104,7 @@ namespace Start.Scripts.Character
             SubscribeToEvents();
         }
 
-        private async void Start()
+        private void Start()
         {
             if (characterData == null)
             {
@@ -82,15 +112,14 @@ namespace Start.Scripts.Character
                 return;
             }
 
-            await new WaitForEndOfFrame();
+            new WaitForEndOfFrame();
 
             if (_gameManager == null && GameManager.Instance != null)
             {
                 Initialize(GameManager.Instance);
                 if (statDisplay != null)
                 {
-                    statDisplay.UpdateStats(characterData.stats);
-                    statDisplay.UpdateInventory(characterData.inventory);
+                    statDisplay.UpdateStats(characterData);
                 }
             }
         }
@@ -104,6 +133,11 @@ namespace Start.Scripts.Character
             }
 
             _camera = Camera.main;
+        }
+
+        public void OnGameStateChanged(GameManager.GameState newState)
+        {
+            //update game state logic here if needed
         }
 
         private void InitializePlayer()
@@ -120,13 +154,17 @@ namespace Start.Scripts.Character
             playerContainer = GameObject.FindGameObjectWithTag("Players");
             Cursor = GameObject.FindGameObjectWithTag("cursor");
 
+            RollInitiative();
+        }
+
+        private void Initialize(GameManager gameManager)
+        {
+            _gameManager = gameManager;
             if (_gameManager != null)
             {
-                _gameManager.RollInitiative(characterData);
-            }
-            else
-            {
-                RollInitiative();
+                _gameManager.Party.AddToParty(this.gameObject);
+                _gameManager.Party.OnCharacterStatsChanged += (stats) => characterData.stats = stats;
+                _gameManager.Party.OnCharacterInventoryChanged += (inventory) => characterData.inventory = inventory;
             }
         }
 
@@ -142,7 +180,7 @@ namespace Start.Scripts.Character
         private void RollInitiative()
         {
             var diceRoll = new DiceRoll();
-            var initiativeRoll = diceRoll.RollDice("D20", 1).Keys.First();
+            var initiativeRoll = diceRoll.RollDice("D20", 1).Keys.FirstOrDefault();
             initiative = initiativeRoll;
         }
     }

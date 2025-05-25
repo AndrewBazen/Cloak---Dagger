@@ -1,8 +1,10 @@
 // EnemyManager.cs
 
+using Start.Scripts.Map;
 using System;
 using System.Collections.Generic;
 using Start.Scripts.Enemy;
+using Start.Scripts.Character;
 using UnityEngine;
 
 namespace Start.Scripts.Game
@@ -20,11 +22,13 @@ namespace Start.Scripts.Game
         private float difficultyMultiplier = 1.0f;
 
         public IReadOnlyList<EnemyController> CurrentEnemies => enemies;
-
+        public IReadOnlyList<GameObject> EnemyObjects => enemyObjects;
+        private IReadOnlyList<CharacterInfoData> partyData;
         public void Initialize()
         {
             enemies.Clear();
             enemyObjects.Clear();
+            partyData = GameManager.Instance.Party.PartyMembers;
         }
 
         public void SpawnEnemiesForLevel(int level)
@@ -59,7 +63,20 @@ namespace Start.Scripts.Game
 
         private Vector3 FindSpawnPosition()
         {
-            return new Vector3(UnityEngine.Random.Range(-5, 5), UnityEngine.Random.Range(-5, 5), 0);
+            foreach (OverlayTile spawntile in MapManager.Instance.enemySpawnTiles)
+            {
+                if (spawntile != null && !spawntile.isBlocked)
+                {
+                    return spawntile.transform.position;
+                }
+                var randomTile = MapManager.Instance.enemySpawnTiles[UnityEngine.Random.Range(0, MapManager.Instance.enemySpawnTiles.Count)];
+                if (randomTile != null && !randomTile.isBlocked)
+                {
+                    return randomTile.transform.position;
+                }
+            }
+            Debug.LogWarning("No valid spawn tile found for enemy.");
+            return new Vector3(0, 0, 0); // Fallback position if no valid spawn tile is found
         }
 
         public void RemoveEnemy(EnemyController enemy)

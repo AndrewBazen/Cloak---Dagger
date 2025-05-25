@@ -1,5 +1,5 @@
-using System;
 using Start.Scripts.Inventory;
+using Start.Scripts.Character;
 using TMPro;
 using UnityEngine;
 
@@ -13,8 +13,8 @@ namespace Start.Scripts.Item
 
         private void OnTriggerEnter2D(Collider2D col)
         {
-            var inventory = col.transform.GetComponent<CharacterInfo>().inventory;
-            
+            var inventory = col.transform.GetComponent<PlayerController>().characterData.inventory;
+
             if (!inventory) return;
 
             if (inventory.InventorySystem.AddToInventory(ItemData, 1))

@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Start.Scripts.Map;
-using Start.Scripts.Game;
 
 namespace Start.Scripts.Character
 {
@@ -11,7 +9,7 @@ namespace Start.Scripts.Character
         {
             if (!_isMoving && _overlayTile != null && standingOnTile != null)
             {
-                _path = _pathFinder.FindPath(standingOnTile, _overlayTile, _rangeFinderTiles, false);
+                _path = _gameManager.PathFinder.FindPath(standingOnTile, _overlayTile, _rangeFinderTiles, false);
                 HighlightPath();
             }
 
@@ -72,7 +70,7 @@ namespace Start.Scripts.Character
         {
             if (characterData == null || standingOnTile == null) return;
 
-            _rangeFinderTiles = _rangeFinder.GetTilesInRange(
+            _rangeFinderTiles = GetTilesInRange(
                 new Vector2Int(standingOnTile.gridLocation.x, standingOnTile.gridLocation.y),
                 CharacterMovementRange);
         }

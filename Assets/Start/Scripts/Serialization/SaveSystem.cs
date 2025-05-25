@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using Start.Scripts.Enemy;
 using Start.Scripts.Party;
+using Start.Scripts.Character;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -11,7 +12,7 @@ namespace Start.Scripts.Serialization
 {
     public class SaveSystem
     {
-        public void SaveGameData(string saveName, List<CharacterInfo> party, List<EnemyData> enemies)
+        public void SaveGameData(string saveName, List<CharacterInfoData> party, List<EnemyData> enemies)
         {
             Debug.Log(Application.persistentDataPath);
             BinaryFormatter formatter = GetBinaryFormatter();
@@ -24,7 +25,6 @@ namespace Start.Scripts.Serialization
 
             FileStream stream = new FileStream(path, FileMode.Create);
             GameData gameData = new GameData(party, enemies);
-            
             formatter.Serialize(stream, gameData);
             stream.Close();
         }
@@ -63,11 +63,11 @@ namespace Start.Scripts.Serialization
             SurrogateSelector selector = new SurrogateSelector();
 
             Vector3SerializationSurrogate vector3Surrogate = new Vector3SerializationSurrogate();
-            ListSerializationSurrogate<CharacterInfo> partyListSurrogate = new ListSerializationSurrogate<CharacterInfo>();
+            ListSerializationSurrogate<CharacterInfoData> partyListSurrogate = new ListSerializationSurrogate<CharacterInfoData>();
             ListSerializationSurrogate<EnemyData> enemyListSurrogate = new ListSerializationSurrogate<EnemyData>();
 
             selector.AddSurrogate(typeof(Vector3), new StreamingContext(StreamingContextStates.All), vector3Surrogate);
-            selector.AddSurrogate(typeof(List<CharacterInfo>), new StreamingContext(StreamingContextStates.All), partyListSurrogate);
+            selector.AddSurrogate(typeof(List<CharacterInfoData>), new StreamingContext(StreamingContextStates.All), partyListSurrogate);
             selector.AddSurrogate(typeof(List<EnemyData>), new StreamingContext(StreamingContextStates.All), enemyListSurrogate);
 
             formatter.SurrogateSelector = selector;

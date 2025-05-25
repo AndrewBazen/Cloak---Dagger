@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
 using Start.Scripts.Classes;
 using Start.Scripts.Inventory;
-using Start.Scripts.UI;
+using Start.Scripts.Level;
 using UnityEngine;
 
 namespace Start.Scripts.Character
@@ -13,6 +12,8 @@ namespace Start.Scripts.Character
         public string id;
         public PlayerClass playerClass;
         public int startExp = 100;
+        public ILevel currentLevel;
+        public OverlayTile CurentTile;
 
         public InventoryHolder inventory;
         public List<InventoryItemData> inventoryItems;
@@ -28,8 +29,8 @@ namespace Start.Scripts.Character
         public int bonusToHit;
         public int armorClass = 10;
 
-        public InventoryItemData weapon;
-        public InventoryItemData armor;
+        public InventoryItemData equippedWeapon;
+        public InventoryItemData equippedArmor;
         public List<Ability> abilities;
 
         public List<int> stats;

@@ -1,10 +1,8 @@
 // InputRouter.cs
 
 using UnityEngine;
-using Start.Scripts.Systems;
-using Start.Scripts.Game;
 
-namespace Start.Scripts.Systems
+namespace Start.Scripts.Game
 {
     public class InputRouter : MonoBehaviour
     {

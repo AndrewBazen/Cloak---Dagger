@@ -55,7 +55,7 @@ namespace Start.Scripts.Pooling
 
         private void InitializePools()
         {
-            foreach (var definition in pooledPrefabs)
+            foreach (PooledPrefabDefinition definition in pooledPrefabs)
             {
                 CreatePool(definition.prefab, definition.initialSize, definition.maxSize);
             }

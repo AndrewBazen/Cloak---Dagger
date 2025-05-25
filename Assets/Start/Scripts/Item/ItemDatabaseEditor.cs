@@ -1,15 +1,15 @@
 #if UNITY_EDITOR
 using UnityEditor;
-[CustomEditor(typeof(ItemDatabase))]
+[CustomEditor(typeof(Start.Scripts.Item.ItemDatabase))]
 public class ItemDatabaseEditor : Editor
 {
     public override void OnInspectorGUI()
     {
         DrawDefaultInspector();
 
-        if (GUILayout.Button("Reload Items"))
+        if (UnityEngine.GUILayout.Button("Reload Items"))
         {
-            ((ItemDatabase)target).SendMessage("LoadAllItems");
+            ((Start.Scripts.Item.ItemDatabase)target).SendMessage("LoadAllItems");
         }
     }
 }

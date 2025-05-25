@@ -2,7 +2,7 @@
 using Start.Scripts.Classes;
 using UnityEngine;
 
-namespace Start.Scripts.Data
+namespace Start.Scripts.Character
 {
     [System.Serializable]
     public class CharacterLoadData

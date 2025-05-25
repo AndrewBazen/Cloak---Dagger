@@ -4,7 +4,7 @@ using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Start.Scripts.Systems
+namespace Start.Scripts.Game
 {
     /// <summary>
     /// Central event dispatcher for scene-level events.

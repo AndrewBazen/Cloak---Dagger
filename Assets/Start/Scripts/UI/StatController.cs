@@ -1,18 +1,18 @@
 using System.Collections.Generic;
 using System.Linq;
-using Start.Scripts.Dice;
 using UnityEngine;
+using Start.Scripts.Character;
 
 namespace Start.Scripts.UI
 {
     public class StatController
     {
-        
+
         // updates the players stats based off input and then recalculated modifiers
-        public void UpdateStats(CharacterInfo player, Dictionary<string, int> statsToUpdate)
+        public void UpdateStats(CharacterInfoData player, Dictionary<string, int> statsToUpdate)
         {
             var playerStats = player.skills;
-            foreach (var item in statsToUpdate )
+            foreach (var item in statsToUpdate)
             {
                 if (playerStats.ContainsKey(item.Key))
                 {
@@ -23,7 +23,7 @@ namespace Start.Scripts.UI
             UpdateModifiers(player);
         }
 
-        public void AdjustClassModifiers(CharacterInfo player)
+        public void AdjustClassModifiers(CharacterInfoData player)
         {
             for (var i = 0; i < player.modifiers.Count; i++)
             {
@@ -31,7 +31,7 @@ namespace Start.Scripts.UI
             }
         }
 
-        private void UpdateModifiers(CharacterInfo player)
+        private void UpdateModifiers(CharacterInfoData player)
         {
             List<int> tempMods = new List<int>(6);
             foreach (var stat in player.skills.Values)
@@ -88,6 +88,5 @@ namespace Start.Scripts.UI
 
             player.modifiers = tempMods;
         }
-        
     }
 }

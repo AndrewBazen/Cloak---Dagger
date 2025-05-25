@@ -3,14 +3,16 @@ using System.Linq;
 using Start.Scripts.Enemy;
 using UnityEngine;
 using Random = System.Random;
+using Start.Scripts.Character;
 
 namespace Start.Scripts.Dice
 {
     public class DiceRoll
     {
         private Random _random;
-        public int RollToHit(CharacterInfo info)
+        public int RollToHit(PlayerController player)
         {
+            var info = player.characterData;
             var hitBonus = info.bonusToHit;
             var rolls = new List<int>();
             if (!info.hasAdvantage)
@@ -25,9 +27,8 @@ namespace Start.Scripts.Dice
             }
             rolls = RollDice("D20", 2).Values.First();
             return rolls.Max();
-            
+
         }
-        
         public int RollToHit(EnemyController info)
         {
             var hitBonus = info.bonusToHit;
@@ -44,9 +45,7 @@ namespace Start.Scripts.Dice
             }
             rolls = RollDice("D20", 2).Values.First();
             return rolls.Max();
-            
         }
-        
         public int RollStat()
         {
             var statRoll = 0;
@@ -65,13 +64,12 @@ namespace Start.Scripts.Dice
             return statRoll;
         }
 
-        public int RollDmg(CharacterInfo other)
+        public int RollDmg(PlayerController other)
         {
-            var dmgRoll = RollDice(other.weapon.dmgDice, other.weapon.dmgDiceNum);
+            var dmgRoll = RollDice(other.characterData.weapon.dmgDice, other.characterData.weapon.dmgDiceNum);
             var dmg = dmgRoll.Keys.First();
             return dmg;
         }
-        
         public int RollDmg(EnemyController other)
         {
             var dmgRoll = RollDice(other.weapon.dmgDice, other.weapon.dmgDiceNum);
@@ -141,12 +139,11 @@ namespace Start.Scripts.Dice
                     }
                     result[rollTotal] = rolls;
                     return result;
-                default :
+                default:
                     Debug.Log("invalid Dice Type");
                     return null;
             }
         }
-        
-        
+
     }
 }

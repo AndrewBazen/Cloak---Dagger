@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Start.Scripts.Character;
-using CharacterInfo = Start.Scripts.Character.CharacterInfo;
 using Start.Scripts.Dice;
 using Start.Scripts.Enemy;
 using Start.Scripts.Game;
@@ -8,7 +7,6 @@ using Start.Scripts.Map;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Start.Scripts.Combat
 {
@@ -21,21 +19,13 @@ namespace Start.Scripts.Combat
         private GameObject _dmgText;
         public bool isTurn;
         private DiceRoll _diceRoll;
-        private CharacterInfo _characterInfo;
+        private CharacterInfoData _characterData;
         private EnemyController _enemyController;
         private GameManager _gameManager;
-        
         public void Initialize(GameManager gameManager)
         {
             _gameManager = gameManager;
-            
-            // Subscribe to game manager events
-            _gameManager.OnCombatStarted += OnCombatStarted;
-            _gameManager.OnCombatEnded += OnCombatEnded;
-            _gameManager.OnCharacterDamaged += OnCharacterDamaged;
-            _gameManager.OnEnemyDamaged += OnEnemyDamaged;
         }
-        
         public void OnGameStateChanged(GameManager.GameState newState)
         {
             // React to game state changes
@@ -48,67 +38,24 @@ namespace Start.Scripts.Combat
                 // Exploration specific setup
             }
         }
-        
-        private void OnDestroy()
-        {
-            // Unsubscribe from events when destroyed
-            if (_gameManager != null)
-            {
-                _gameManager.OnCombatStarted -= OnCombatStarted;
-                _gameManager.OnCombatEnded -= OnCombatEnded;
-                _gameManager.OnCharacterDamaged -= OnCharacterDamaged;
-                _gameManager.OnEnemyDamaged -= OnEnemyDamaged;
-            }
-        }
-        
-        private void OnCombatStarted()
-        {
-            Debug.Log("Combat started");
-            // Combat initialization logic
-        }
-        
-        private void OnCombatEnded()
-        {
-            Debug.Log("Combat ended");
-            // Combat cleanup logic
-        }
-        
-        private void OnCharacterDamaged(CharacterInfo character, int damage)
-        {
-            if (character == null) return;
-            
-            _dmgText = Instantiate(dmgPrefab, character.gameObject.transform);
-            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(damage.ToString());
-        }
-        
-        private void OnEnemyDamaged(EnemyController enemy, int damage)
-        {
-            if (enemy == null) return;
-            
-            _dmgText = Instantiate(dmgPrefab, enemy.gameObject.transform);
-            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(damage.ToString());
-        }
-        
         private void Start()
         {
             _playerContainer = GameObject.FindGameObjectWithTag("Players").gameObject;
             if (gameObject.CompareTag("Player"))
             {
-                _characterInfo = GetComponentInParent<CharacterInfo>();
+                _characterData = GetComponentInParent<CharacterInfoData>();
             }
 
             if (gameObject.CompareTag("enemy"))
             {
                 _enemyController = GetComponentInParent<EnemyController>();
             }
-            
             if (turnOrder == null)
             {
                 turnOrder = GameObject.FindGameObjectWithTag("TurnController")?.GetComponent<TurnOrder>();
             }
-            
             _diceRoll = new DiceRoll();
-            
+
             // Register with GameManager if not explicitly initialized
             if (_gameManager == null && GameManager.Instance != null)
             {
@@ -120,8 +67,8 @@ namespace Start.Scripts.Combat
         {
             if (gameObject.CompareTag("Player"))
             {
-                _characterInfo.hasAttack = true;
-                _characterInfo.hasMovement = true;
+                _characterData.hasAttack = true;
+                _characterData.hasMovement = true;
                 isTurn = true;
                 DetectOtherCharacters();
                 return;
@@ -136,8 +83,8 @@ namespace Start.Scripts.Combat
         {
             if (gameObject.CompareTag("Player"))
             {
-                _characterInfo.hasAttack = false;
-                _characterInfo.hasMovement = false;
+                _characterData.hasAttack = false;
+                _characterData.hasMovement = false;
                 isTurn = false;
                 foreach (var tile in MapManager.Instance.Map.Values)
                 {
@@ -160,10 +107,10 @@ namespace Start.Scripts.Combat
             }
         }
 
+
         private void DetectOtherCharacters()
         {
             if (turnOrder == null || turnOrder.characterList == null) return;
-            
             foreach (var character in turnOrder.characterList)
             {
                 if (character == null) continue;
@@ -175,68 +122,63 @@ namespace Start.Scripts.Combat
                         enemyTile.isBlocked = true;
                 }
 
-                if (character.CompareTag("Player") && turnOrder.currentInitiative != character.GetComponent<CharacterInfo>().initiative)
+                if (character.CompareTag("Player") && turnOrder.currentInitiative != character.GetComponent<PlayerController>().Initiative)
                 {
-                    var playerTile = character.GetComponent<CharacterInfo>().standingOnTile;
+                    var playerTile = character.GetComponent<PlayerController>().StandingOnTile;
                     if (playerTile != null)
                         playerTile.isBlocked = true;
                 }
             }
         }
 
-        public void AttackOtherCharacter(CharacterInfo info, EnemyController other)
+        public void AttackOtherCharacter(PlayerController player, EnemyController other)
         {
             if (_gameManager != null)
             {
                 // Use GameManager for attack resolution
-                var hitRoll = _diceRoll.RollToHit(info);
+                var hitRoll = _diceRoll.RollToHit(player);
                 if (hitRoll < other.armorClass)
                 {
-                    _dmgText = Instantiate(dmgPrefab, other.transform);
-                    _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText("Miss");
+                    _gameManager.Combat.DamageEnemy(other, 0); // No damage on miss
                     return;
                 }
-                var dmg = _diceRoll.RollDmg(info);
-                _gameManager.DamageEnemy(other, dmg);
+                var dmg = _diceRoll.RollDmg(player);
+                _gameManager.Combat.DamageEnemy(other, dmg);
             }
             else
             {
                 // Fallback to legacy behavior
-                var hitRoll = _diceRoll.RollToHit(info);
+                var hitRoll = _diceRoll.RollToHit(player);
                 if (hitRoll < other.armorClass)
                 {
-                    _dmgText = Instantiate(dmgPrefab, other.transform);
-                    _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText("Miss");
+                    _gameManager.Combat.DamageEnemy(other, 0); // No damage on miss
                     return;
                 }
-                var dmg = _diceRoll.RollDmg(info);
+                var dmg = _diceRoll.RollDmg(player);
                 TakeDamage(dmg, other);
             }
         }
-        
-        public void AttackOtherCharacter(EnemyController info, CharacterInfo other)
+        public void AttackOtherCharacter(EnemyController info, PlayerController other)
         {
             if (_gameManager != null)
             {
                 // Use GameManager for attack resolution
                 var hitRoll = _diceRoll.RollToHit(info);
-                if (hitRoll < other.armorClass)
+                if (hitRoll < other.characterData.armorClass)
                 {
-                    _dmgText = Instantiate(dmgPrefab, other.transform);
-                    _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText("Miss");
+                    _gameManager.Combat.DamageCharacter(other, 0); // No damage on miss
                     return;
                 }
                 var dmg = _diceRoll.RollDmg(info);
-                _gameManager.DamageCharacter(other, dmg);
+                _gameManager.Combat.DamageCharacter(other, dmg);
             }
             else
             {
                 // Fallback to legacy behavior
                 var hitRoll = _diceRoll.RollToHit(info);
-                if (hitRoll < other.armorClass)
+                if (hitRoll < other.characterData.armorClass)
                 {
-                    _dmgText = Instantiate(dmgPrefab, other.transform);
-                    _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText("Miss");
+                    _gameManager.Combat.DamageCharacter(other, 0); // No damage on miss
                     return;
                 }
                 var dmg = _diceRoll.RollDmg(info);
@@ -246,27 +188,25 @@ namespace Start.Scripts.Combat
 
         // Legacy damage handling methods - these will eventually be removed
         // when everything is migrated to GameManager
-        private void TakeDamage(int dmg, CharacterInfo other)
+        private void TakeDamage(int dmg, PlayerController other)
         {
-            if (dmg >= other.health)
+            if (dmg >= other.CurrentHealth)
             {
                 turnOrder?.characterList.Remove(other.gameObject);
-                turnOrder?._sortedInitiatives.Remove(other.initiative);
-                turnOrder?._initiatives.Remove(other.initiative);
-                gameObject.GetComponent<EnemyController>()?.PlayerDict.Remove(other.gameObject);
+                turnOrder?._sortedInitiatives.Remove(other.Initiative);
+                turnOrder?._initiatives.Remove(other.Initiative);
+                GameManager.Instance.Party.RemoveFromParty(other.gameObject);
                 Destroy(other.gameObject);
-                Debug.Log("player destroyed");
+                Debug.Log("player killed");
                 if (_playerContainer.transform.childCount == 1)
                 {
                     Debug.Log("GameOver");
                     GameOver();
                 }
             }
-            other.health -= dmg;
-            _dmgText = Instantiate(dmgPrefab, other.gameObject.transform);
-            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(dmg.ToString());
+            other.CurrentHealth -= dmg;
+            _gameManager.Combat.DamageCharacter(other, dmg);
         }
-        
         private void TakeDamage(int dmg, EnemyController other)
         {
             if (dmg >= other.health)
@@ -278,9 +218,9 @@ namespace Start.Scripts.Combat
                 Destroy(other.gameObject);
             }
             other.health -= dmg;
-            _dmgText = Instantiate(dmgPrefab, other.gameObject.transform);
-            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(dmg.ToString());
+            _gameManager.Combat.DamageEnemy(other, dmg);
         }
+
 
         private void GameOver()
         {
@@ -294,4 +234,4 @@ namespace Start.Scripts.Combat
             }
         }
     }
-} 
+}

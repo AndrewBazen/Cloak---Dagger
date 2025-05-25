@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Unity.Collections;
+using Unity.Mathematics;
+using Start.Scripts.AI.Jobs;
 
 namespace Start.Scripts
 {
@@ -19,11 +22,12 @@ namespace Start.Scripts
         public Sprite pathSprite;
         public OverlayTile previous;
         public Vector3Int gridLocation;
-        public Vector2Int Grid2DLocation => new (gridLocation.x, gridLocation.y);
+        public Vector2Int Grid2DLocation => new(gridLocation.x, gridLocation.y);
+        public List<OverlayTile> neighbors = new();
 
         private void Awake()
         {
-            _overlayRend = overlayPrefab.GetComponent<SpriteRenderer>(); 
+            _overlayRend = overlayPrefab.GetComponent<SpriteRenderer>();
             _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         }
 
@@ -39,8 +43,8 @@ namespace Start.Scripts
 
         public void SetSprite()
         {
-                _spriteRenderer.sprite = pathSprite;
-                _spriteRenderer.color = new Color(1, 1, 1, 1);
+            _spriteRenderer.sprite = pathSprite;
+            _spriteRenderer.color = new Color(1, 1, 1, 1);
 
         }
 
@@ -63,6 +67,25 @@ namespace Start.Scripts
 
             return null;
         }
+
+        public List<OverlayTile> GetInRangeTiles(int range)
+        {
+            List<OverlayTile> inRangeTiles = new();
+            foreach (var tile in MapManager.Instance.Map.Values)
+            {
+                if (tile == null) continue;
+
+                int distance = Mathf.Abs(tile.gridLocation.x - gridLocation.x) +
+                               Mathf.Abs(tile.gridLocation.y - gridLocation.y);
+                if (distance <= range && !tile.isBlocked)
+                {
+                    inRangeTiles.Add(tile);
+                }
+            }
+
+            return inRangeTiles;
+        }
+
 
         // private void OnTriggerEnter2D(Collider2D col)
         // {

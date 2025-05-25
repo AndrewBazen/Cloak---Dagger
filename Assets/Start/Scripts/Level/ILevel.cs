@@ -1,7 +1,5 @@
 
 
-using System.Collections.Generic;
-using Start.Scripts.Enemy;
 
 namespace Start.Scripts.Level
 {
@@ -9,7 +7,7 @@ namespace Start.Scripts.Level
     {
         public void BuildLevel()
         {
-            
+
         }
 
     }

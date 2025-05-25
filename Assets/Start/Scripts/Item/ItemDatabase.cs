@@ -1,8 +1,8 @@
-
+using Start.Scripts.Inventory;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Start.Scripts.Inventory
+namespace Start.Scripts.Item
 {
     /// <summary>
     /// Runtime-accessible database for all inventory items (weapons, armor, etc.).

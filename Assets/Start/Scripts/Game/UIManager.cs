@@ -2,7 +2,7 @@
 
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Start.Scripts.Systems;
+using Start.Scripts.Game;
 
 namespace Start.Scripts.UI
 {
@@ -34,10 +34,10 @@ namespace Start.Scripts.UI
 
         private void Start()
         {
-            if (SceneEventManager.Instance != null)
+            if (GameManager.Instance.SceneEvents != null)
             {
-                SceneEventManager.Instance.OnSceneLoaded += HandleSceneLoaded;
-                SceneEventManager.Instance.OnActiveSceneChanged += HandleActiveSceneChanged;
+                GameManager.Instance.SceneEvents.OnSceneLoaded += HandleSceneLoaded;
+                GameManager.Instance.SceneEvents.OnActiveSceneChanged += HandleActiveSceneChanged;
             }
         }
 
@@ -49,6 +49,40 @@ namespace Start.Scripts.UI
         private void HandleActiveSceneChanged(Scene oldScene, Scene newScene)
         {
             UpdateUIForScene(newScene.name);
+        }
+
+        public void ShowMainMenu()
+        {
+            UpdateUIForScene("MainMenu");
+        }
+
+        public void ShowCombatUI()
+        {
+            UpdateUIForScene("Combat");
+        }
+        public void ShowGameOver()
+        {
+            UpdateUIForScene("GameOver");
+        }
+
+        public void ShowExplorationUI()
+        {
+            UpdateUIForScene("Exploration");
+        }
+
+        public void ShowGameplayUI()
+        {
+            UpdateUIForScene("GamePlay");
+        }
+
+        public void HidePauseMenu()
+        {
+            TogglePauseMenu(false);
+        }
+
+        public void ShowPauseMenu()
+        {
+            TogglePauseMenu(true);
         }
 
         private void UpdateUIForScene(string sceneName)

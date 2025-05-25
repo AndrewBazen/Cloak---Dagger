@@ -6,22 +6,21 @@ namespace Start.Scripts.Character
 {
     public partial class PlayerController : MonoBehaviour, INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
         private void SubscribeToEvents()
         {
             if (GameEvents.current != null)
             {
-                GameEvents.current.OnLoadEvent += DestroyMe;
-                GameEvents.current.OnTurnStart += (_combatController.StartTurn, GetInRangeTiles);
-                GameEvents.current.OnTurnEnd += (_combatController.StopTurn, ResetTiles);
+                GameEvents current = GameEvents.current;
+                current.OnLoadEvent += DestroyMe;
+                current.OnTurnStart += (_combatController.StartTurn, GetInRangeTiles);
+                current.OnTurnEnd += (_combatController.StopTurn, ResetTiles);
                 if (characterData != null)
                 {
-                    GameEvents.current.OnCharacterStatsChanged += (stats) => characterData.stats = stats;
-                    GameEvents.current.OnCharacterInventoryChanged += (inventory) => characterData.inventory = inventory;
+                    current.OnCharacterStatsChanged += (stats) => characterData.stats = stats;
+                    current.OnCharacterInventoryChanged += (inventory) => characterData.inventory = inventory;
                 }
-                GameEvents.current.OnEnemiesChanged += (enemies) => _enemies = enemies;
-                GameEvents.current.BroadcastMessage();
+                current.OnEnemiesChanged += (enemies) => _enemies = enemies;
+                current.BroadcastMessage();
             }
             else
             {

@@ -1,4 +1,3 @@
-using UnityEngine;
 
 namespace Start.Scripts.Game
 {
@@ -14,11 +13,10 @@ namespace Start.Scripts.Game
         /// </summary>
         /// <param name="gameManager">Reference to the GameManager</param>
         void Initialize(GameManager gameManager);
-        
         /// <summary>
         /// Called by GameManager when the game state changes.
         /// </summary>
         /// <param name="newState">The new game state</param>
         void OnGameStateChanged(GameManager.GameState newState);
     }
-} 
+}

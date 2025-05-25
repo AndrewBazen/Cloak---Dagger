@@ -1,12 +1,8 @@
-using System;
 using System.Collections.Generic;
 using Start.Scripts.Classes;
+using Start.Scripts.Character;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Start.Scripts.UI
@@ -15,7 +11,7 @@ namespace Start.Scripts.UI
     {
         public TMP_Dropdown dropdown;
         public Image playerPic;
-        public CharacterInfo player;
+        public CharacterInfoData player;
         public List<PlayerClass> classes;
 
 

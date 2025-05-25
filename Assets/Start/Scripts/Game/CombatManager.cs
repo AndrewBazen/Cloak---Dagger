@@ -1,6 +1,6 @@
 
 // CombatManager.cs
-
+using TMPro;
 using System;
 using System.Collections.Generic;
 using Start.Scripts.Character;
@@ -13,16 +13,20 @@ namespace Start.Scripts.Game
     {
         public event Action OnCombatStarted;
         public event Action OnCombatEnded;
+        public event Action OnCharacterDamaged;
+        public event Action OnEnemyDamaged;
 
-        private List<CharacterInfo> party;
-        private List<EnemyController> enemies;
+        private List<GameObject> party;
+        private List<GameObject> enemies;
         private Queue<MonoBehaviour> turnQueue;
         private MonoBehaviour currentTurnActor;
+        private GameObject _dmgText;
+        [SerializeField] private GameObject dmgPrefab;
 
         public void Initialize(PartyManager partyManager, EnemyManager enemyManager)
         {
-            party = new List<CharacterInfo>(partyManager.CurrentParty);
-            enemies = new List<EnemyController>(enemyManager.CurrentEnemies);
+            party = new List<GameObject>(partyManager.PartyObjects);
+            enemies = new List<GameObject>(enemyManager.EnemyObjects);
             turnQueue = new Queue<MonoBehaviour>();
             BuildTurnOrder();
         }
@@ -30,7 +34,7 @@ namespace Start.Scripts.Game
         private void BuildTurnOrder()
         {
             turnQueue.Clear();
-            List<MonoBehaviour> all = new();
+            List<GameObject> all = new();
             all.AddRange(party);
             all.AddRange(enemies);
 
@@ -42,20 +46,19 @@ namespace Start.Scripts.Game
             });
 
             foreach (var actor in all)
-                turnQueue.Enqueue(actor);
+                turnQueue.Enqueue(actor.GetComponent<MonoBehaviour>());
 
             StartNextTurn();
             OnCombatStarted?.Invoke();
         }
 
-        private int GetInitiative(MonoBehaviour actor)
+        private int GetInitiative(GameObject actor)
         {
-            return actor switch
+            if (actor.GetComponent<PlayerController>())
             {
-                CharacterInfo c => c.initiative,
-                EnemyController e => e.initiative,
-                _ => 0
-            };
+                return actor.GetComponent<PlayerController>().Initiative;
+            }
+            return actor.GetComponent<EnemyController>().initiative;
         }
 
         public void EndTurn()
@@ -67,6 +70,21 @@ namespace Start.Scripts.Game
             }
 
             StartNextTurn();
+        }
+
+        public void DamageCharacter(PlayerController player, int damage)
+        {
+            if (player == null) return;
+            _dmgText = Instantiate(dmgPrefab, player.gameObject.transform);
+            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(damage.ToString());
+            OnCharacterDamaged?.Invoke();
+        }
+
+        public void DamageEnemy(EnemyController enemy, int damage)
+        {
+            if (enemy == null) return;
+            _dmgText = Instantiate(dmgPrefab, enemy.gameObject.transform);
+            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(damage.ToString());
         }
 
         private void StartNextTurn()
@@ -84,6 +102,12 @@ namespace Start.Scripts.Game
         private void EndCombat()
         {
             OnCombatEnded?.Invoke();
+        }
+
+        public int RollInitiative(CharacterInfoData characterData)
+        {
+            // Example initiative roll, can be replaced with actual game logic
+            return UnityEngine.Random.Range(1, 21);
         }
     }
 }

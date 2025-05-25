@@ -3,7 +3,7 @@
 using System;
 using UnityEngine;
 
-namespace Start.Scripts.Systems
+namespace Start.Scripts.Game
 {
     public class InputManager : MonoBehaviour
     {
