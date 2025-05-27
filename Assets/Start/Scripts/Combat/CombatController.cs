@@ -3,29 +3,19 @@ using Start.Scripts.Character;
 using Start.Scripts.Dice;
 using Start.Scripts.Enemy;
 using Start.Scripts.Game;
-using Start.Scripts.Map;
-using TMPro;
 using UnityEngine;
+using Start.Scripts.BaseClasses;
 using UnityEngine.SceneManagement;
 
 namespace Start.Scripts.Combat
 {
-    public class CombatController : MonoBehaviour, IGameManagerAware
+    public class CombatController : Controller
     {
-        [SerializeField] private TurnOrder turnOrder;
-        [SerializeField] public GameObject dmgPrefab;
-
-        private GameObject _playerContainer;
-        private GameObject _dmgText;
         public bool isTurn;
         private DiceRoll _diceRoll;
-        private CharacterInfoData _characterData;
+        private PlayerController _playerController;
         private EnemyController _enemyController;
-        private GameManager _gameManager;
-        public void Initialize(GameManager gameManager)
-        {
-            _gameManager = gameManager;
-        }
+
         public void OnGameStateChanged(GameManager.GameState newState)
         {
             // React to game state changes
@@ -38,96 +28,58 @@ namespace Start.Scripts.Combat
                 // Exploration specific setup
             }
         }
-        private void Start()
+
+        protected override void Start()
         {
-            _playerContainer = GameObject.FindGameObjectWithTag("Players").gameObject;
+            InitializeController();
             if (gameObject.CompareTag("Player"))
             {
-                _characterData = GetComponentInParent<CharacterInfoData>();
+                _playerController = gameObject.GetComponent<PlayerController>();
             }
-
-            if (gameObject.CompareTag("enemy"))
+            else if (gameObject.CompareTag("enemy"))
             {
-                _enemyController = GetComponentInParent<EnemyController>();
-            }
-            if (turnOrder == null)
-            {
-                turnOrder = GameObject.FindGameObjectWithTag("TurnController")?.GetComponent<TurnOrder>();
+                _enemyController = gameObject.GetComponent<EnemyController>();
             }
             _diceRoll = new DiceRoll();
-
-            // Register with GameManager if not explicitly initialized
-            if (_gameManager == null && GameManager.Instance != null)
-            {
-                Initialize(GameManager.Instance);
-            }
         }
 
         public void StartTurn()
         {
             if (gameObject.CompareTag("Player"))
             {
-                _characterData.hasAttack = true;
-                _characterData.hasMovement = true;
+                _playerController.HasAttack = true;
+                _playerController.HasMovement = true;
                 isTurn = true;
-                DetectOtherCharacters();
-                return;
             }
-            _enemyController.hasAttack = true;
-            _enemyController.hasMovement = true;
-            isTurn = true;
-            DetectOtherCharacters();
+            else if (gameObject.CompareTag("enemy"))
+            {
+                _enemyController.HasAttack = true;
+                _enemyController.HasMovement = true;
+                isTurn = true;
+            }
         }
 
         public void StopTurn()
         {
             if (gameObject.CompareTag("Player"))
             {
-                _characterData.hasAttack = false;
-                _characterData.hasMovement = false;
+                _playerController.HasAttack = false;
+                _playerController.HasMovement = false;
                 isTurn = false;
-                foreach (var tile in MapManager.Instance.Map.Values)
-                {
-                    tile.isBlocked = false;
-                }
-
-                turnOrder.startNextTurn = true;
+                // foreach (var tile in MapManager.Instance.Map.Values)
+                // {
+                //    tile.isBlocked = false;
+                // }
             }
             else if (gameObject.CompareTag("enemy"))
             {
-                _enemyController.hasAttack = false;
-                _enemyController.hasMovement = false;
+                _enemyController.HasAttack = false;
+                _enemyController.HasMovement = false;
                 isTurn = false;
-                foreach (var tile in MapManager.Instance.Map.Values)
-                {
-                    tile.isBlocked = false;
-                }
-
-                turnOrder.startNextTurn = true;
-            }
-        }
-
-
-        private void DetectOtherCharacters()
-        {
-            if (turnOrder == null || turnOrder.characterList == null) return;
-            foreach (var character in turnOrder.characterList)
-            {
-                if (character == null) continue;
-
-                if (character.CompareTag("enemy") && turnOrder.currentInitiative != character.GetComponent<EnemyController>().initiative)
-                {
-                    var enemyTile = character.GetComponent<EnemyController>().standingOnTile;
-                    if (enemyTile != null)
-                        enemyTile.isBlocked = true;
-                }
-
-                if (character.CompareTag("Player") && turnOrder.currentInitiative != character.GetComponent<PlayerController>().Initiative)
-                {
-                    var playerTile = character.GetComponent<PlayerController>().StandingOnTile;
-                    if (playerTile != null)
-                        playerTile.isBlocked = true;
-                }
+                // foreach (var tile in MapManager.Instance.Map.Values)
+                //{
+                //      tile.isBlocked = false;
+                // }
             }
         }
 
@@ -192,17 +144,9 @@ namespace Start.Scripts.Combat
         {
             if (dmg >= other.CurrentHealth)
             {
-                turnOrder?.characterList.Remove(other.gameObject);
-                turnOrder?._sortedInitiatives.Remove(other.Initiative);
-                turnOrder?._initiatives.Remove(other.Initiative);
-                GameManager.Instance.Party.RemoveFromParty(other.gameObject);
+                _gameManager.Party.RemoveFromParty(other.gameObject);
                 Destroy(other.gameObject);
                 Debug.Log("player killed");
-                if (_playerContainer.transform.childCount == 1)
-                {
-                    Debug.Log("GameOver");
-                    GameOver();
-                }
             }
             other.CurrentHealth -= dmg;
             _gameManager.Combat.DamageCharacter(other, dmg);
@@ -211,9 +155,7 @@ namespace Start.Scripts.Combat
         {
             if (dmg >= other.health)
             {
-                turnOrder?.characterList.Remove(other.gameObject);
-                turnOrder?._sortedInitiatives.Remove(other.initiative);
-                turnOrder?._initiatives.Remove(other.initiative);
+                _gameManager.Enemies.RemoveEnemy(other);
                 gameObject.GetComponent<PlayerController>()?.Enemies.Remove(other.gameObject);
                 Destroy(other.gameObject);
             }

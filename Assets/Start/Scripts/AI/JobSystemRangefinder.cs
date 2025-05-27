@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using Start.Scripts.Map;
 using Start.Scripts.AI.Jobs;
 using Unity.Jobs;
+using System.Collections.Generic;
 
 namespace Start.Scripts.AI
 {
@@ -135,13 +136,13 @@ namespace Start.Scripts.AI
         /// <summary>
         /// Gets the range tiles for the player's character.
         /// </summary>
-        public void GetRangeTiles(Vector2Int location, int movementRange)
+        public List<OverlayTile> GetRangeTiles(Vector2Int location, int movementRange)
         {
             var playerController = GetComponent<PlayerController>();
             if (playerController == null)
             {
                 Debug.LogWarning("PlayerController is null. Cannot get range tiles.");
-                return;
+                return new List<OverlayTile>();
             }
 
             // Ensure the grid is initialized
@@ -175,12 +176,29 @@ namespace Start.Scripts.AI
                         overlayTile.ShowTile();
                     }
                 }
+                var returnTiles = ConvertToOverlayTiles(rangeFinder.ResultTiles);
                 rangeFinder.ResultTiles.Dispose();
+                return returnTiles;
             }
             else
             {
                 Debug.LogWarning("Grid data is not initialized. Cannot get range tiles.");
+                return new List<OverlayTile>();
             }
+        }
+
+        private List<OverlayTile> ConvertToOverlayTiles(NativeList<int2> nativeTiles)
+        {
+            var overlayTiles = new List<OverlayTile>();
+            foreach (var tile in nativeTiles)
+            {
+                var overlayTile = MapManager.Instance.GetTileAtPosition(new Vector2Int(tile.x, tile.y));
+                if (overlayTile != null)
+                {
+                    overlayTiles.Add(overlayTile);
+                }
+            }
+            return overlayTiles;
         }
 
         /// <summary>

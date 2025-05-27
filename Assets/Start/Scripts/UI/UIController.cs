@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Start.Scripts.Character;
 using Start.Scripts.Inventory;
 using UnityEngine;
+using Start.Scripts.Game;
 
 namespace Start.Scripts.UI
 {
@@ -12,17 +13,10 @@ namespace Start.Scripts.UI
 
         private void Awake()
         {
-            GameEvents.current.OnCharacterStatsChanged += UpdateStats;
-            GameEvents.current.OnCharacterInventoryChanged += UpdateInventory;
-            GameManager.Instance.OnPartyUpdated += UpdatePartyUI;
         }
 
         private void OnDestroy()
         {
-            GameEvents.current.OnCharacterStatsChanged -= UpdateStats;
-            GameEvents.current.OnCharacterInventoryChanged -= UpdateInventory;
-            if (GameManager.Instance != null)
-                GameManager.Instance.OnPartyUpdated -= UpdatePartyUI;
         }
 
         private void UpdateStats(CharacterInfoData data)
@@ -32,7 +26,7 @@ namespace Start.Scripts.UI
 
         private void UpdateInventory(InventoryHolder inventory)
         {
-            inventoryDisplay?.UpdateInventory(inventory);
+            // inventoryDisplay?.UpdateInventory(inventory);
         }
 
         private void UpdatePartyUI(List<CharacterInfoData> party)

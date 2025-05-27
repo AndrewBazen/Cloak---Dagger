@@ -1,11 +1,9 @@
 ﻿
 using System.Collections.Generic;
-using System.Linq;
 using Start.Scripts.Dice;
-using Start.Scripts.Game;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
+using Start.Scripts.Character;
 
 
 namespace Start.Scripts.UI
@@ -17,12 +15,11 @@ namespace Start.Scripts.UI
         public GameObject roll;
         public StatDropDownController statDropDownController;
         public List<TMP_Dropdown> statDropDowns;
-        private CharacterInfo _player;
-        
+        private CharacterInfoData _player;
 
         private void Start()
         {
-            _player = gameObject.GetComponentInParent<CharacterInfo>();
+            _player = gameObject.GetComponentInParent<PlayerController>().characterData;
             _rollText = roll.GetComponent<TMP_Text>();
             _diceRoll = new DiceRoll();
         }
@@ -43,14 +40,12 @@ namespace Start.Scripts.UI
                 }
 
                 var currIndex = statDropDowns[0].options.Count - emptyStats + 1;
-                
-                
-                
+
+
                 foreach (var dropdown in statDropDowns)
                 {
                     dropdown.options[currIndex].text = stat.ToString();
                 }
-                
                 statDropDownController.currOptionPool.Add(new TMP_Dropdown.OptionData(stat.ToString()), currIndex);
                 _player.stats.Add(stat);
             }

@@ -11,7 +11,6 @@ namespace Start.Scripts.Pooling
     public class PoolManager : MonoBehaviour
     {
         private static PoolManager _instance;
-        
         public static PoolManager Instance
         {
             get
@@ -28,7 +27,7 @@ namespace Start.Scripts.Pooling
 
         // Container for all pools
         private readonly Dictionary<string, object> _pools = new Dictionary<string, object>();
-        
+
         // Root transform for better hierarchy organization
         private Transform _poolsRoot;
 
@@ -45,10 +44,9 @@ namespace Start.Scripts.Pooling
 
             _instance = this;
             DontDestroyOnLoad(gameObject);
-            
             _poolsRoot = new GameObject("Pools").transform;
             _poolsRoot.SetParent(transform);
-            
+
             // Initialize pools from prefab definitions
             InitializePools();
         }
@@ -57,7 +55,14 @@ namespace Start.Scripts.Pooling
         {
             foreach (PooledPrefabDefinition definition in pooledPrefabs)
             {
-                CreatePool(definition.prefab, definition.initialSize, definition.maxSize);
+                if (definition.prefab != null)
+                {
+                    //  CreatePool(definition.prefab, definition.initialSize, definition.maxSize);
+                }
+                else
+                {
+                    Debug.LogWarning("Pooled prefab is null! Skipping pool creation.");
+                }
             }
         }
 
@@ -67,20 +72,18 @@ namespace Start.Scripts.Pooling
         public ObjectPool<T> CreatePool<T>(T prefab, int initialSize = 10, int maxSize = 50) where T : Component
         {
             string key = GetKeyForPrefab(prefab);
-            
             if (_pools.ContainsKey(key))
             {
                 Debug.LogWarning($"Pool for {key} already exists!");
                 return (ObjectPool<T>)_pools[key];
             }
-            
+
             // Create a container for this specific pool
             var poolContainer = new GameObject($"{typeof(T).Name}Pool").transform;
             poolContainer.SetParent(_poolsRoot);
-            
             var pool = new ObjectPool<T>(prefab, poolContainer, initialSize, maxSize);
             _pools.Add(key, pool);
-            
+
             // Pre-populate the pool
             var tempList = new List<T>();
             for (int i = 0; i < initialSize; i++)
@@ -88,13 +91,12 @@ namespace Start.Scripts.Pooling
                 var item = pool.Get();
                 tempList.Add(item);
             }
-            
+
             // Return them all to the pool
             foreach (var item in tempList)
             {
                 pool.Release(item);
             }
-            
             return pool;
         }
 
@@ -104,12 +106,10 @@ namespace Start.Scripts.Pooling
         public ObjectPool<T> GetPool<T>(T prefab) where T : Component
         {
             string key = GetKeyForPrefab(prefab);
-            
             if (_pools.TryGetValue(key, out var pool))
             {
                 return (ObjectPool<T>)pool;
             }
-            
             return CreatePool(prefab);
         }
 
@@ -134,7 +134,6 @@ namespace Start.Scripts.Pooling
                     clearMethod.Invoke(pool, null);
                 }
             }
-            
             _pools.Clear();
         }
 
@@ -166,4 +165,4 @@ namespace Start.Scripts.Pooling
         public int initialSize = 10;
         public int maxSize = 50;
     }
-} 
+}

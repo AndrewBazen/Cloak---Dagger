@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
-using Unity.Collections;
-using Unity.Mathematics;
-using Start.Scripts.AI.Jobs;
+using Start.Scripts.Map;
+using Start.Scripts.Game;
+using System.Linq;
+using Start.Scripts.Character;
 
 namespace Start.Scripts
 {
@@ -24,6 +25,7 @@ namespace Start.Scripts
         public Vector3Int gridLocation;
         public Vector2Int Grid2DLocation => new(gridLocation.x, gridLocation.y);
         public List<OverlayTile> neighbors = new();
+        private GameManager _gameManager => GameManager.Instance;
 
         private void Awake()
         {
@@ -56,16 +58,31 @@ namespace Start.Scripts
 
         public GameObject GetPlayerOnTile()
         {
-            var contacts = new List<Collider2D>();
-            var col = gameObject.GetComponent<PolygonCollider2D>();
-            col.GetContacts(contacts);
-            if (contacts.Count != 0)
+            var players = _gameManager.Party.PartyObjects;
+            var playerOnTile = players.Where(player => player.GetComponent<PlayerController>().StandingOnTile != null && player.GetComponent<PlayerController>().StandingOnTile.Grid2DLocation == Grid2DLocation).FirstOrDefault();
+            if (playerOnTile != null)
             {
-                var playerOnTile = contacts[0].gameObject;
                 return playerOnTile;
             }
-
             return null;
+        }
+
+        public List<OverlayTile> GetNeighbors()
+        {
+            neighbors.Clear();
+            foreach (var tile in MapManager.Instance.Map.Values)
+            {
+                if (tile == null || tile.isBlocked) continue;
+
+                int distance = Mathf.Abs(tile.gridLocation.x - gridLocation.x) +
+                               Mathf.Abs(tile.gridLocation.y - gridLocation.y);
+                if (distance == 1)
+                {
+                    neighbors.Add(tile);
+                }
+            }
+
+            return neighbors;
         }
 
         public List<OverlayTile> GetInRangeTiles(int range)

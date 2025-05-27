@@ -66,7 +66,7 @@ namespace Start.Scripts.Dice
 
         public int RollDmg(PlayerController other)
         {
-            var dmgRoll = RollDice(other.characterData.weapon.dmgDice, other.characterData.weapon.dmgDiceNum);
+            var dmgRoll = RollDice(other.characterData.equippedWeapon.dmgDice, other.characterData.equippedWeapon.dmgDiceNum);
             var dmg = dmgRoll.Keys.First();
             return dmg;
         }

@@ -17,8 +17,8 @@ namespace Start.Scripts.Game
         [SerializeField] private GameObject enemyPrefab;
         [SerializeField] private GameObject enemyContainer;
 
-        private List<GameObject> enemyObjects = new();
-        private List<EnemyController> enemies = new();
+        public List<GameObject> enemyObjects = new();
+        public List<EnemyController> enemies = new();
         private float difficultyMultiplier = 1.0f;
 
         public IReadOnlyList<EnemyController> CurrentEnemies => enemies;

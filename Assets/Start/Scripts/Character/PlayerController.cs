@@ -8,10 +8,11 @@ using Start.Scripts.Inventory;
 using Start.Scripts.UI;
 using Start.Scripts.Combat;
 using System.Linq;
+using Start.Scripts.BaseClasses;
 
 namespace Start.Scripts.Character
 {
-    public partial class PlayerController : MonoBehaviour, INotifyPropertyChanged, IGameManagerAware
+    public partial class PlayerController : Controller, INotifyPropertyChanged, IGameManagerAware
     {
         [Header("References")]
         public GameObject Cursor;
@@ -51,6 +52,25 @@ namespace Start.Scripts.Character
                 OnPropertyChanged(nameof(CurrentHealth));
             }
         }
+        public bool HasMovement
+        {
+            get => hasMovement;
+            set
+            {
+                hasMovement = value;
+                OnPropertyChanged(nameof(HasMovement));
+            }
+        }
+
+        public bool HasAttack
+        {
+            get => hasAttack;
+            set
+            {
+                hasAttack = value;
+                OnPropertyChanged(nameof(HasAttack));
+            }
+        }
 
         [SerializeField] private GameObject playerContainer;
         [SerializeField] private GameObject enemyContainer;
@@ -78,7 +98,6 @@ namespace Start.Scripts.Character
 
         private CombatController _combatController;
         private static Camera _camera;
-        private GameManager _gameManager;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -97,15 +116,15 @@ namespace Start.Scripts.Character
         {
             _camera = Camera.main;
             _enemies = new List<GameObject>();
-
             InitializeComponents();
             LoadCharacterStats();
             InitializePlayer();
             SubscribeToEvents();
         }
 
-        private void Start()
+        protected override void Start()
         {
+            InitializeController();
             if (characterData == null)
             {
                 Debug.LogError("Character data is not set. Please assign a CharacterInfoData object.");
@@ -116,7 +135,7 @@ namespace Start.Scripts.Character
 
             if (_gameManager == null && GameManager.Instance != null)
             {
-                Initialize(GameManager.Instance);
+                InitializeParty();
                 if (statDisplay != null)
                 {
                     statDisplay.UpdateStats(characterData);
@@ -157,9 +176,8 @@ namespace Start.Scripts.Character
             RollInitiative();
         }
 
-        private void Initialize(GameManager gameManager)
+        private void InitializeParty()
         {
-            _gameManager = gameManager;
             if (_gameManager != null)
             {
                 _gameManager.Party.AddToParty(this.gameObject);

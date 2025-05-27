@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Start.Scripts.Character
 {
-    public partial class PlayerController : MonoBehaviour
+    public partial class PlayerController
     {
         private void Update()
         {

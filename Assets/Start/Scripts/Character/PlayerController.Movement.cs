@@ -1,9 +1,10 @@
 using UnityEngine;
 using Start.Scripts.Map;
+using Start.Scripts.BaseClasses;
 
 namespace Start.Scripts.Character
 {
-    public partial class PlayerController : MonoBehaviour
+    public partial class PlayerController
     {
         private void HandleMovement()
         {
@@ -24,7 +25,7 @@ namespace Start.Scripts.Character
                 ResetTiles();
             }
 
-            if (_path != null && _path.Count > 0 && _isMoving)
+            while (_path != null && _path.Count > 0 && _isMoving)
             {
                 MoveAlongPath();
             }
@@ -49,11 +50,6 @@ namespace Start.Scripts.Character
                 _isMoving = false;
                 hasMovement = false;
                 GetInRangeTiles();
-
-                if (_gameManager != null && standingOnTile != null)
-                {
-                    _gameManager.OnPlayerMoved?.Invoke(standingOnTile.gridLocation);
-                }
             }
         }
 

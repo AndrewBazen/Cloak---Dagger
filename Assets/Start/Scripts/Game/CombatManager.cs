@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Start.Scripts.Character;
 using Start.Scripts.Enemy;
+using Start.Scripts.Combat;
 using UnityEngine;
 
 namespace Start.Scripts.Game
@@ -23,12 +24,17 @@ namespace Start.Scripts.Game
         private GameObject _dmgText;
         [SerializeField] private GameObject dmgPrefab;
 
-        public void Initialize(PartyManager partyManager, EnemyManager enemyManager)
+        public void Initialize()
         {
-            party = new List<GameObject>(partyManager.PartyObjects);
-            enemies = new List<GameObject>(enemyManager.EnemyObjects);
+            party = new List<GameObject>(GameManager.Instance.Party.PartyObjects);
+            enemies = new List<GameObject>(GameManager.Instance.Enemies.EnemyObjects);
             turnQueue = new Queue<MonoBehaviour>();
             BuildTurnOrder();
+            if (turnQueue.Count == 0)
+            {
+                Debug.LogWarning("No actors in turn queue. Combat cannot start.");
+                return;
+            }
         }
 
         private void BuildTurnOrder()
@@ -63,11 +69,12 @@ namespace Start.Scripts.Game
 
         public void EndTurn()
         {
-            if (turnQueue.Count == 0)
+            if (currentTurnActor == null)
             {
-                EndCombat();
+                Debug.LogWarning("Current turn actor is null. Cannot end turn.");
                 return;
             }
+            currentTurnActor.GetComponent<CombatController>().StopTurn();
 
             StartNextTurn();
         }
@@ -96,7 +103,13 @@ namespace Start.Scripts.Game
             }
 
             currentTurnActor = turnQueue.Dequeue();
-            // Activate character or enemy turn behavior here
+            if (currentTurnActor == null)
+            {
+                Debug.LogWarning("Current turn actor is null. Skipping turn.");
+                StartNextTurn();
+                return;
+            }
+            currentTurnActor.GetComponent<CombatController>().StartTurn();
         }
 
         private void EndCombat()

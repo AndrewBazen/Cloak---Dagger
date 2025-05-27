@@ -138,9 +138,7 @@ namespace Start.Scripts
 
         public void GetInRangeTiles()
         {
-            _rangeFinderTiles = _gameManager.RangeFinder.GetTilesInRange(new Vector2Int(_player.StandingOnTile.gridLocation.x,
-              _player.StandingOnTile.gridLocation.y), playerMovement);
-
+            _rangeFinderTiles = _gameManager.RangeFinder.GetRangeTiles(_player.StandingOnTile.Grid2DLocation, playerMovement);
         }
     }
 }

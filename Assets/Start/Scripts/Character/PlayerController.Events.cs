@@ -4,7 +4,7 @@ using Start.Scripts.Game;
 
 namespace Start.Scripts.Character
 {
-    public partial class PlayerController : MonoBehaviour, INotifyPropertyChanged
+    public partial class PlayerController
     {
         private void SubscribeToEvents()
         {
@@ -12,22 +12,36 @@ namespace Start.Scripts.Character
             {
                 GameEvents current = GameEvents.current;
                 current.OnLoadEvent += DestroyMe;
-                current.OnTurnStart += (_combatController.StartTurn, GetInRangeTiles);
-                current.OnTurnEnd += (_combatController.StopTurn, ResetTiles);
-                if (characterData != null)
-                {
-                    current.OnCharacterStatsChanged += (stats) => characterData.stats = stats;
-                    current.OnCharacterInventoryChanged += (inventory) => characterData.inventory = inventory;
-                }
                 current.OnEnemiesChanged += (enemies) => _enemies = enemies;
-                current.BroadcastMessage();
             }
             else
             {
                 Debug.LogWarning("GameEvents.current is null. Event subscriptions skipped.");
             }
         }
+        public void StartTurn()
+        {
+            if (_combatController != null)
+            {
+                _combatController.StartTurn();
+            }
+            else
+            {
+                Debug.LogWarning("CombatController is not initialized. Cannot start turn.");
+            }
+        }
 
+        public void EndTurn()
+        {
+            if (_combatController != null)
+            {
+                _combatController.StopTurn();
+            }
+            else
+            {
+                Debug.LogWarning("CombatController is not initialized. Cannot end turn.");
+            }
+        }
         private void DestroyMe()
         {
             if (GameEvents.current != null)
@@ -37,7 +51,7 @@ namespace Start.Scripts.Character
 
             if (_gameManager != null && characterData != null)
             {
-                _gameManager.RemoveFromParty(characterData.id);
+                _gameManager.Party.RemoveFromParty(this.gameObject);
             }
 
             Destroy(gameObject);

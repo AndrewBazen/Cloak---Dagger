@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Start.Scripts.Game;
-using LevelData = Start.Scripts.Level.LevelData;
+using Start.Scripts.Levels;
 using TileData = Start.Scripts.AI.Jobs.TileData;
 using Unity.Mathematics;
 
@@ -18,7 +18,7 @@ namespace Start.Scripts.Map
         [SerializeField] private GameObject overlayContainer;
         [SerializeField] private Tilemap[] tileMaps;
         [SerializeField] private Tilemap groundTileMap;
-        private LevelData levelData;
+        [SerializeField] private Level level; 
         public List<OverlayTile> playerSpawnTiles;
         public List<OverlayTile> enemySpawnTiles;
         public Dictionary<Vector2Int, OverlayTile> Map { get; private set; }
@@ -36,24 +36,22 @@ namespace Start.Scripts.Map
 
         private void Start()
         {
-            var tileMap = tileMaps.FirstOrDefault(x => x.gameObject.name == "Ground");
-            var groundMap = tileMaps.First(x => x.gameObject.name == "Ground");
-            var originPosition = groundMap.CellToWorld(new Vector3Int(0, 0, 0));
-            var gridWidth = groundMap.cellBounds.size.x;
-            var gridHeight = groundMap.cellBounds.size.y;
-            levelData = GameManager.Instance.Party.CurrentLevelData;
-            playerSpawnTiles = levelData.playerSpawnTiles;
-            enemySpawnTiles = levelData.enemySpawnTiles;
+            var originPosition = groundTileMap.CellToWorld(new Vector3Int(0, 0, 0));
+            var gridWidth = groundTileMap.cellBounds.size.x;
+            var gridHeight = groundTileMap.cellBounds.size.y;
+           
+            playerSpawnTiles = level.PlayerSpawnTiles;
+            enemySpawnTiles = level.EnemySpawnTiles;
 
             // TODO: implement a way to load tilemaps dynamically based on level data
             // TODO: implement populating the overlay grid based on the tilemaps
             // TODO: implement a way to set the player and enemy spawn tiles based on level data
 
-            GenerateOverlayGrid(gridWidth, gridHeight, originPosition, groundMap, tileMaps);
+            GenerateOverlayGrid(gridWidth, gridHeight, originPosition, groundTileMap);
             SetupNeighbors();
         }
 
-        private void GenerateOverlayGrid(int width, int height, Vector3 originPosition, Tilemap groundMap, Tilemap[] allMaps)
+        private void GenerateOverlayGrid(int width, int height, Vector3 originPosition, Tilemap groundMap)
         {
             for (var y = 0; y < height; y++)
             {
@@ -74,8 +72,6 @@ namespace Start.Scripts.Map
                     // Add to our map dictionary
                     Map.Add(new Vector2Int(x, y), tileComponent);
 
-                    // Check if this tile should be blocked (e.g., walls, obstacles)
-                    tileComponent.isBlocked = IsPositionBlocked(tilePosition, allMaps);
                 }
             }
         }
@@ -172,6 +168,43 @@ namespace Start.Scripts.Map
                 }
             }
             return null;
+        }
+
+        public List<OverlayTile> GetTilesInLine(Vector2Int start, Vector2Int end)
+        {
+            var tilesInLine = new List<OverlayTile>();
+            if (Map.ContainsKey(start) && Map.ContainsKey(end))
+            {
+                var startTile = Map[start];
+                var endTile = Map[end];
+
+                // Use Bresenham's line algorithm to find tiles in the line
+                int dx = Mathf.Abs(end.x - start.x);
+                int dy = Mathf.Abs(end.y - start.y);
+                int sx = start.x < end.x ? 1 : -1;
+                int sy = start.y < end.y ? 1 : -1;
+                int err = dx - dy;
+
+                while (true)
+                {
+                    tilesInLine.Add(startTile);
+                    if (start.x == end.x && start.y == end.y) break;
+                    int e2 = err * 2;
+                    if (e2 > -dy)
+                    {
+                        err -= dy;
+                        start.x += sx;
+                        startTile = Map[new Vector2Int(start.x, start.y)];
+                    }
+                    if (e2 < dx)
+                    {
+                        err += dx;
+                        start.y += sy;
+                        startTile = Map[new Vector2Int(start.x, start.y)];
+                    }
+                }
+            }
+            return tilesInLine;
         }
 
         // Clear all visual indicators on tiles

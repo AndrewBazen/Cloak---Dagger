@@ -16,7 +16,7 @@ namespace Start.Scripts.Game
         public PartyManager Party => partyManager;
         public EnemyManager Enemies => enemyManager;
         public CombatManager Combat => combatManager;
-        public MapManager Map => mapManager;
+        public MapManager MapMan => mapManager;
         public UIManager UI => uiManager;
         public SceneEventManager SceneEvents => sceneEventManager;
         public InputManager Input => inputManager;
@@ -28,7 +28,6 @@ namespace Start.Scripts.Game
 
         public GameState Current => _currentGameState;
         public event System.Action OnMapGenerated;
-
 
         [Header("Managers")]
         [SerializeField] private PartyManager partyManager;
@@ -67,7 +66,7 @@ namespace Start.Scripts.Game
 
             partyManager.Initialize();
             enemyManager.Initialize();
-            combatManager.Initialize(partyManager, enemyManager);
+            combatManager.Initialize();
 
             combatManager.OnCombatStarted += () =>
             {

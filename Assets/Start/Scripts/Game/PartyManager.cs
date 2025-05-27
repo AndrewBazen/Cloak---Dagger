@@ -22,13 +22,14 @@ namespace Start.Scripts.Game
         public event Action<CharacterInfoData> OnPlayerSpawned;
         public event Action<List<int>> OnCharacterStatsChanged;
         public event Action<InventoryHolder> OnCharacterInventoryChanged;
+        public event Action OnPlayerMoved;
 
         [SerializeField] private GameObject playerPrefab;
         [SerializeField] private GameObject playerContainer;
 
-        public IReadOnlyList<CharacterInfoData> PartyMembers => _partyMembers;
-        public IReadOnlyList<GameObject> PartyObjects => _partyObjects;
-        public IReadOnlyList<PlayerController> PartyControllers => _partyControllers;
+        public List<CharacterInfoData> PartyMembers => _partyMembers;
+        public List<GameObject> PartyObjects => _partyObjects;
+        public List<PlayerController> PartyControllers => _partyControllers;
         public CharacterInfoData ActivePlayer => _activePlayer;
         public LevelData CurrentLevelData => _currentLevelData;
 
