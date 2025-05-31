@@ -1,10 +1,6 @@
 using UnityEngine;
 using Start.Scripts.Enemy;
-using System.Collections.Generic;
-using Start.Scripts.Map;
 using System.Linq;
-
-
 
 namespace Start.Scripts.Character
 {
@@ -17,11 +13,11 @@ namespace Start.Scripts.Character
             GetInRangeTiles();
             HandleCursorMovement();
 
-            if (hasMovement)
+            if (characterData.HasMovement)
             {
                 HandleMovement();
             }
-            else if (hasAttack)
+            else if (characterData.HasAction && characterData.EquippedWeapon != null && characterData.EquippedWeapon.weaponRange > 0)
             {
                 HandleAttack();
             }
@@ -62,53 +58,18 @@ namespace Start.Scripts.Character
         private bool EnemyInWeaponRange()
         {
             if (_selectedEnemy == null || _overlayTile == null) return false;
-            var tilesInRange = GetTilesInRange(_overlayTile.Grid2DLocation, characterData.equippedWeapon.weaponRange);
+            var tilesInRange = _gameManager.RangeFinder.GetRangeTiles(_overlayTile.Grid2DLocation, characterData.EquippedWeapon.weaponRange);
             if (tilesInRange == null || tilesInRange.Count == 0) return false;
             // if the path is blocked return false
-            if (tilesInRange.Any(tile => tile.isBlocked && !_selectedEnemy.standingOnTile.Grid2DLocation.Equals(tile.Grid2DLocation)))
+            if (tilesInRange.Any(tile => tile.isBlocked && !_selectedEnemy.StandingOnTile.Grid2DLocation.Equals(tile.Grid2DLocation)))
             {
                 return false;
             }
-            if (tilesInRange.Any(tile => tile.Grid2DLocation.Equals(_selectedEnemy.standingOnTile.Grid2DLocation)))
+            if (tilesInRange.Any(tile => tile.Grid2DLocation.Equals(_selectedEnemy.StandingOnTile.Grid2DLocation)))
             {
                 return true;
             }
             return false;
-        }
-
-
-        public List<OverlayTile> GetTilesInRange(Vector2Int location, int range)
-        {
-            var startingTile = MapManager.Instance.Map[location];
-            var inRangeTiles = new List<OverlayTile>();
-            int stepCount = 0;
-
-            inRangeTiles.Add(startingTile);
-
-            //Should contain the surroundingTiles of the previous step. 
-            var tilesForPreviousStep = new List<OverlayTile> { startingTile };
-            while (stepCount < range)
-            {
-                var surroundingTiles = new List<OverlayTile>();
-
-                foreach (var item in tilesForPreviousStep)
-                {
-                    if (range > 1)
-                    {
-                        surroundingTiles.AddRange(MapManager.Instance.GetSurroundingTiles
-                            (new Vector2Int(item.gridLocation.x, item.gridLocation.y)));
-                        continue;
-                    }
-                    surroundingTiles.AddRange(MapManager.Instance.GetAllSurroundingTiles
-                        (new Vector2Int(item.gridLocation.x, item.gridLocation.y)));
-                }
-
-                inRangeTiles.AddRange(surroundingTiles);
-                tilesForPreviousStep = surroundingTiles.Distinct().ToList();
-                stepCount++;
-            }
-
-            return inRangeTiles.Distinct().ToList();
         }
 
         private static RaycastHit2D? GetFocusedOnTile()

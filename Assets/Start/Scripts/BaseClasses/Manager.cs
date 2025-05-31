@@ -1,10 +1,6 @@
 using System;
 using UnityEngine;
-using System.Linq;
-using System.Collections.Generic;
 using Start.Scripts.Game;
-using Start.Scripts.Character;
-using Start.Scripts.Enemy;
 
 namespace Start.Scripts.BaseClasses
 {
@@ -12,10 +8,7 @@ namespace Start.Scripts.BaseClasses
     {
         public event Action OnInitialized;
         public event Action OnDestroyed;
-        private GameManager _gameManager;
-        private Manager _managerInParent;
-        private List<Manager> _managers;
-        private List<GameObject> _managerObjects;
+        private GameManager _gameManager => GameManager.Instance;
 
         protected virtual void Start()
         {
@@ -24,9 +17,14 @@ namespace Start.Scripts.BaseClasses
 
         protected virtual void Initialize()
         {
-            _gameManager = GameManager.Instance;
+            InitializeManager();
             // Custom initialization logic can be added in derived classes
             OnInitialized?.Invoke();
+        }
+
+        protected virtual void InitializeManager()
+        {
+            // override this method in derived classes to perform specific initialization tasks
         }
 
 

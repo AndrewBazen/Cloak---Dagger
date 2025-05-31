@@ -1,4 +1,3 @@
-using UnityEngine;
 
 namespace Start.Scripts.Enemy.Strategies
 {

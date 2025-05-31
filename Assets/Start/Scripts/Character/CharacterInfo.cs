@@ -50,20 +50,20 @@ namespace Start.Scripts.Character
             // Create a specific player ID
             id = DateTime.Now.ToLongDateString() + DateTime.Now.ToLongTimeString() +
                         Random.Range(0, int.MaxValue);
-            
+
             // Initialize collections
             if (inventoryItems == null)
                 inventoryItems = new List<InventoryItemData>();
-                
+
             if (abilities == null)
                 abilities = new List<Ability>();
-                
+
             if (stats == null)
                 stats = new List<int>();
-                
+
             if (modifiers == null)
                 modifiers = new List<int>();
-            
+
             // Initialize skills
             skills = new Dictionary<string, int>
             {
@@ -74,7 +74,7 @@ namespace Start.Scripts.Character
                 {"Wis", 10},
                 {"Cha", 10}
             };
-            
+
             // Apply class modifiers if class is available
             if (playerClass != null && modifiers.Count > 0 && playerClass.statModifiers.Count > 0)
             {
@@ -85,4 +85,4 @@ namespace Start.Scripts.Character
             }
         }
     }
-} 
+}

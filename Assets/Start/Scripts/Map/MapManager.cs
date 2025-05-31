@@ -1,11 +1,9 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using Start.Scripts.Game;
-using Start.Scripts.Levels;
 using TileData = Start.Scripts.AI.Jobs.TileData;
 using Unity.Mathematics;
+using Start.Scripts.Levels;
 
 using Unity.Collections;
 
@@ -18,7 +16,7 @@ namespace Start.Scripts.Map
         [SerializeField] private GameObject overlayContainer;
         [SerializeField] private Tilemap[] tileMaps;
         [SerializeField] private Tilemap groundTileMap;
-        [SerializeField] private Level level; 
+        [SerializeField] private Level level;
         public List<OverlayTile> playerSpawnTiles;
         public List<OverlayTile> enemySpawnTiles;
         public Dictionary<Vector2Int, OverlayTile> Map { get; private set; }
@@ -39,7 +37,6 @@ namespace Start.Scripts.Map
             var originPosition = groundTileMap.CellToWorld(new Vector3Int(0, 0, 0));
             var gridWidth = groundTileMap.cellBounds.size.x;
             var gridHeight = groundTileMap.cellBounds.size.y;
-           
             playerSpawnTiles = level.PlayerSpawnTiles;
             enemySpawnTiles = level.EnemySpawnTiles;
 

@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using UnityEngine;
 using Start.Scripts.Game;
 
@@ -19,29 +18,6 @@ namespace Start.Scripts.Character
                 Debug.LogWarning("GameEvents.current is null. Event subscriptions skipped.");
             }
         }
-        public void StartTurn()
-        {
-            if (_combatController != null)
-            {
-                _combatController.StartTurn();
-            }
-            else
-            {
-                Debug.LogWarning("CombatController is not initialized. Cannot start turn.");
-            }
-        }
-
-        public void EndTurn()
-        {
-            if (_combatController != null)
-            {
-                _combatController.StopTurn();
-            }
-            else
-            {
-                Debug.LogWarning("CombatController is not initialized. Cannot end turn.");
-            }
-        }
         private void DestroyMe()
         {
             if (GameEvents.current != null)
@@ -57,10 +33,6 @@ namespace Start.Scripts.Character
             Destroy(gameObject);
         }
 
-        public void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }
 

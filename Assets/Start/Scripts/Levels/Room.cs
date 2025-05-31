@@ -1,8 +1,8 @@
 using System;
 
-namespace Start.Scripts.Level
+namespace Start.Scripts.Levels
 {
-    public class Room : Level
+    public class Room
     {
         private void Awake()
         {

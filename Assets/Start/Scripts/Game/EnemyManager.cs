@@ -56,9 +56,7 @@ namespace Start.Scripts.Game
 
         private void ApplyDifficulty(EnemyController enemy)
         {
-            enemy.maxHealth = Mathf.RoundToInt(enemy.maxHealth * difficultyMultiplier);
-            enemy.health = enemy.maxHealth;
-            enemy.bonusToHit = Mathf.RoundToInt(enemy.bonusToHit * difficultyMultiplier);
+            enemy.SetDifficulty(difficultyMultiplier);
         }
 
         private Vector3 FindSpawnPosition()

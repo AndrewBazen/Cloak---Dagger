@@ -1,7 +1,7 @@
 
 
 
-namespace Start.Scripts.Level
+namespace Start.Scripts.Levels
 {
     public interface ILevel
     {

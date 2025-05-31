@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Start.Scripts.Level
+namespace Start.Scripts.Levels
 {
     public class Level : MonoBehaviour, ILevel
     {
-        public LevelData LevelData {
+        public LevelData LevelData
+        {
             get => levelData;
             set => levelData = value;
         }
@@ -15,16 +16,19 @@ namespace Start.Scripts.Level
         public List<OverlayTile> PlayerSpawnTiles;
         public List<OverlayTile> EnemySpawnTiles;
 
-        
-        public Level(string Name, string scene, int difficulty) {
+
+        public Level(string Name, string scene, int difficulty)
+        {
             levelData = ScriptableObject.CreateInstance<LevelData>();
             levelData.levelName = Name;
             levelData.sceneName = scene;
             levelData.difficulty = difficulty;
-            foreach (var tile in levelData.enemySpawnTiles) {
+            foreach (var tile in levelData.enemySpawnTiles)
+            {
                 EnemySpawnTiles.Add(tile.GetComponent<OverlayTile>());
             }
-            foreach (var tile in levelData.playerSpawnTiles) {
+            foreach (var tile in levelData.playerSpawnTiles)
+            {
                 PlayerSpawnTiles.Add(tile.GetComponent<OverlayTile>());
             }
         }

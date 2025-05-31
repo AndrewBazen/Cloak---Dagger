@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace Start.Scripts.Level
+namespace Start.Scripts.Levels
 {
     /// <summary>
     /// Represents the data for a level in the game.
