@@ -33,8 +33,10 @@ namespace Start.Scripts.AI.Jobs
                 for (int i = 0; i < frontier.Length; i++)
                 {
                     var current = frontier[i];
-                    foreach (var neighbor in GetCardinalNeighbors(current))
+                    for (int j = 0; j < CardinalOffsets.Length; j++)
                     {
+                        var neighbor = current + CardinalOffsets[j];
+
                         if (!IsInsideBounds(neighbor) || visited.Contains(neighbor))
                             continue;
 

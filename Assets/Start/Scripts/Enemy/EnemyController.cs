@@ -2,92 +2,54 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Start.Scripts.Game;
-using Start.Scripts.Inventory;
 using Start.Scripts.Map;
 using Start.Scripts.Enemy.Strategies;
 using UnityEngine;
 using Start.Scripts.Combat;
 using Start.Scripts.Character;
+using Start.Scripts.Serialization;
 using Start.Scripts.BaseClasses;
-using Random = System.Random;
-using System.ComponentModel;
+using Start.Scripts.Interfaces;
 
 namespace Start.Scripts.Enemy
 {
-    public class EnemyController : Controller, INotifyPropertyChanged
+    public class EnemyController : Actor
     {
-        [SerializeField] private float speed;
-        [SerializeField] public EnemyData data;
-        [SerializeField] private int movement;
-        [SerializeField] public int initiative;
-        [SerializeField] private GameObject playerContainer;
-        [SerializeField] private GameObject enemyContainer;
-        [SerializeField] public OverlayTile standingOnTile;
-        [SerializeField] public int health;
-        [SerializeField] public int maxHealth;
-        [SerializeField] public int mana;
-        [SerializeField] public int maxMana;
-        [SerializeField] public List<Ability> abilities;
-        [SerializeField] public List<string> statType;
-        [SerializeField] public List<int> stats;
-        [SerializeField] public int bonusToHit;
-        [SerializeField] public int armorClass;
-        [SerializeField] public InventoryItemData weapon;
-        [SerializeField] public InventoryItemData armor;
-        [SerializeField] public bool hasDisadvantage;
-        [SerializeField] public bool hasAdvantage;
-        [SerializeField] public bool hasMovement;
-        [SerializeField] public bool hasAttack;
-        [SerializeField] public string enemyType;
-
-        public bool HasMovement
-        {
-            get => hasMovement;
-            set
-            {
-                hasMovement = value;
-                OnPropertyChanged(nameof(HasMovement));
-            }
-        }
-
-        public bool HasAttack
-        {
-            get => hasAttack;
-            set
-            {
-                hasAttack = value;
-                OnPropertyChanged(nameof(HasAttack));
-            }
-        }
-
-        private const float InitialMovementValue = 20f;
         private IReadOnlyList<GameObject> _allies;
         private CombatController _combatController;
         private List<OverlayTile> _path;
-
         private List<OverlayTile> _rangeFinderTiles;
         private List<OverlayTile> _rangeTileDistances;
-        private Dictionary<string, int> _statBonuses;
-        private int _spellSlotsAvailable;
         private Strategy _strategy;
-        private bool _isMoving = false;
-        private bool _strategyFound = false;
-
-        // GameManager integration
+        private bool _isMoving;
+        private bool _strategyFound;
+        private bool _hasTurn;
+        private bool _hasDisadvantage;
+        private bool _hasAdvantage;
+        private bool _hasMovement;
+        private bool _hasAction;
+        private bool _hasReaction;
+        private bool _hasBonusAction;
+        private int _initiative;
+        private int _currentHealth;
+        private int _currentMana;
         private IAIStrategy _aiStrategy;
+        private EnemyData _enemyData;
+        private OverlayTile _standingOnTile;
+        [SerializeField] private GameObject playerContainer;
+        [SerializeField] private GameObject enemyContainer;
+
+        public event Action OnEnemyLoaded;
 
         // runs when the object becomes awake
         private void Awake()
         {
             _combatController = GetComponent<CombatController>();
-            _statBonuses = new Dictionary<string, int>();
         }
 
         // Start is called before the first frame update
         protected override void Start()
         {
-            InitializeController();
-            SetEnemyValues();
             _strategy = new Strategy();
             _allies = _gameManager.Enemies.EnemyObjects;
             _path = new List<OverlayTile>();
@@ -107,7 +69,7 @@ namespace Start.Scripts.Enemy
                     _strategy = _aiStrategy.EvaluateStrategy(this);
                     _strategyFound = true;
                 }
-                if (hasMovement && _strategyFound)
+                if (_hasMovement && _strategyFound)
                 {
                     // if player is not in range and enemy is not moving
                     if (!_isMoving)
@@ -118,15 +80,23 @@ namespace Start.Scripts.Enemy
                     }
                     MoveCharacter(_strategy.TargetTile);
                 }
-                if (hasAttack && !hasMovement)
+                if (_hasAction && !_hasMovement)
                 {
                     AttackPlayer(_strategy.PlayerToAttack);
                 }
-                if (!hasMovement && !hasAttack)
+                if (!_hasMovement && !_hasAction)
                 {
                     EndTurn();
                 }
             }
+        }
+
+        public void SetDifficulty(float difficultyMultiplier)
+        {
+            _enemyData.maxHealth = Mathf.RoundToInt(_enemyData.maxHealth * difficultyMultiplier);
+            _enemyData.health = _enemyData.maxHealth;
+            _enemyData.bonusToHit = Mathf.RoundToInt(_enemyData.bonusToHit * difficultyMultiplier);
+            CalculateStatBonuses();
         }
 
         private bool IsAttackBlocked(OverlayTile start, OverlayTile end)
@@ -162,19 +132,19 @@ namespace Start.Scripts.Enemy
         private List<List<OverlayTile>> GetPlayerPaths()
         {
             return _gameManager.Party.PartyObjects.Select(player =>
-                  _gameManager.PathFinder.FindPath(standingOnTile, player.GetComponent<PlayerController>().StandingOnTile,
+                  _gameManager.PathFinder.FindPath(_standingOnTile, player.GetComponent<PlayerController>().StandingOnTile,
                       new List<OverlayTile>(), false)).ToList();
         }
         private List<List<OverlayTile>> GetPlayerPaths(List<GameObject> playersInRange)
         {
             return playersInRange.Select(player =>
-                    _gameManager.PathFinder.FindPath(standingOnTile, player.GetComponent<PlayerController>().StandingOnTile,
+                    _gameManager.PathFinder.FindPath(_standingOnTile, player.GetComponent<PlayerController>().StandingOnTile,
                         new List<OverlayTile>(), false)).ToList();
         }
         private List<GameObject> GetPlayersInRangedRange(OverlayTile tile)
         {
             var playersInRange = new List<GameObject>();
-            var inRangeTiles = _gameManager.RangeFinder.GetRangeTiles(tile.Grid2DLocation, weapon.weaponRange);
+            var inRangeTiles = _gameManager.RangeFinder.GetRangeTiles(tile.Grid2DLocation, _enemyData.weapon.weaponRange);
             foreach (var t in inRangeTiles)
             {
                 if (!CheckIfTileIsPlayerTile(t))
@@ -260,7 +230,7 @@ namespace Start.Scripts.Enemy
         private List<GameObject> GetAlliesAffected(List<OverlayTile> areaOfEffectTiles)
         {
             return (from ally in _allies
-                    let activeTile = ally.GetComponent<EnemyController>().standingOnTile
+                    let activeTile = ally.GetComponent<EnemyController>().StandingOnTile
                     where areaOfEffectTiles.Contains(activeTile)
                     select ally).ToList();
         }
@@ -281,36 +251,36 @@ namespace Start.Scripts.Enemy
             {
                 playersAlongPath.Add(p);
             }
-            return InitialMovementValue - playersAlongPath.Count;
+            return _enemyData.speed - playersAlongPath.Count;
         }
         private float CalculateRangedMovementValue(List<OverlayTile> tempMovePath)
         {
-            var newTile = standingOnTile;
+            var newTile = _standingOnTile;
             if (tempMovePath.Count > 0)
             {
                 newTile = tempMovePath.Last();
             }
-            var tilesInRange = _gameManager.RangeFinder.GetRangeTiles(newTile.Grid2DLocation, movement);
-            var playersInRange = GetPlayersInRange(standingOnTile, movement);
+            var tilesInRange = _gameManager.RangeFinder.GetRangeTiles(newTile.Grid2DLocation, _enemyData.movement);
+            var playersInRange = GetPlayersInRange(_standingOnTile, _enemyData.movement);
             var value = 0f;
             switch (playersInRange.Count)
             {
                 case 0:
                     {
-                        value = InitialMovementValue;
+                        value = _enemyData.speed;
                         break;
                     }
                 case 1:
                     {
                         var playerPaths = GetPlayerPaths(playersInRange);
-                        value = InitialMovementValue + playerPaths[0].Count;
+                        value = _enemyData.speed + playerPaths[0].Count;
                         break;
                     }
                 case > 1:
                     {
                         var playerPaths = GetPlayerPaths(playersInRange);
                         var combinedPathValue = playerPaths.Sum(path => path.Count);
-                        value = InitialMovementValue + combinedPathValue;
+                        value = _enemyData.speed + combinedPathValue;
                         break;
                     }
             }
@@ -327,22 +297,22 @@ namespace Start.Scripts.Enemy
             var hitValue = 0f;
             var dmgDifference = 0f;
             var playerHealth = playerInfo.CurrentHealth;
-            if ((weapon.averageDmg + _statBonuses[weapon.weaponStat])! >
+            if ((_enemyData.weapon.averageDmg + _enemyData.statBonuses[_enemyData.weapon.weaponStat])! >
                 playerHealth)
             {
-                hitValue = weapon.averageDmg +
-                            _statBonuses[weapon.weaponStat];
+                hitValue = _enemyData.weapon.averageDmg +
+                            _enemyData.statBonuses[_enemyData.weapon.weaponStat];
                 dmgDifference = playerHealth - hitValue;
                 return hitValue + dmgDifference;
             }
-            hitValue = weapon.averageDmg +
-                       _statBonuses[weapon.weaponStat];
+            hitValue = _enemyData.weapon.averageDmg +
+                       _enemyData.statBonuses[_enemyData.weapon.weaponStat];
             dmgDifference = hitValue - playerHealth;
             return hitValue + dmgDifference + 100f;
         }
         private float CalculateRangedAttackValue(PlayerController playerInfo, int distanceToPlayer)
         {
-            if (distanceToPlayer < 2 && weapon.averageDmg - playerInfo.CurrentHealth > 0)
+            if (distanceToPlayer < 2 && _enemyData.weapon.averageDmg - playerInfo.CurrentHealth > 0)
             {
                 return -10000;
             }
@@ -351,34 +321,34 @@ namespace Start.Scripts.Enemy
         }
         private List<GameObject> GetPlayersInMeleeRange(OverlayTile tile)
         {
-            return GetPlayersInRange(tile, weapon.weaponRange);
+            return GetPlayersInRange(tile, _enemyData.weapon.weaponRange);
         }
         private float CalculateAbilityAttackValue(PlayerController playerInfo, Ability ability,
             List<GameObject> playersInAbilityRange, List<GameObject> alliesAffected)
         {
             float hitValue;
             var playersAffected = playersInAbilityRange.Count;
-            if ((ability.averageDmg + _statBonuses[ability.stat])! > playerInfo.CurrentHealth && alliesAffected.Count == 0)
+            if ((ability.averageDmg + _enemyData.statBonuses[ability.stat])! > playerInfo.CurrentHealth && alliesAffected.Count == 0)
             {
-                hitValue = (ability.averageDmg + _statBonuses[ability.stat]) - playerInfo.CurrentHealth;
+                hitValue = (ability.averageDmg + _enemyData.statBonuses[ability.stat]) - playerInfo.CurrentHealth;
                 var dmgDifference = Math.Abs(hitValue - playerInfo.CurrentHealth);
                 return hitValue + playersAffected + dmgDifference;
             }
-            if ((ability.averageDmg + _statBonuses[ability.stat])! > playerInfo.CurrentHealth && alliesAffected.Count > 0)
+            if ((ability.averageDmg + _enemyData.statBonuses[ability.stat])! > playerInfo.CurrentHealth && alliesAffected.Count > 0)
             {
-                hitValue = (ability.averageDmg + _statBonuses[ability.stat]) - playerInfo.CurrentHealth;
+                hitValue = (ability.averageDmg + _enemyData.statBonuses[ability.stat]) - playerInfo.CurrentHealth;
                 var dmgDifference = Math.Abs(hitValue - playerInfo.CurrentHealth);
                 return (hitValue + playersAffected + dmgDifference) * .25f;
             }
-            if ((ability.averageDmg + _statBonuses[ability.stat]) > playerInfo.CurrentHealth && alliesAffected.Count == 0)
+            if ((ability.averageDmg + _enemyData.statBonuses[ability.stat]) > playerInfo.CurrentHealth && alliesAffected.Count == 0)
             {
-                hitValue = (ability.averageDmg + _statBonuses[ability.stat]) - playerInfo.CurrentHealth;
+                hitValue = (ability.averageDmg + _enemyData.statBonuses[ability.stat]) - playerInfo.CurrentHealth;
                 var dmgDifference = Math.Abs(hitValue - playerInfo.CurrentHealth);
                 return hitValue + playersAffected + dmgDifference + 100f;
             }
-            if ((ability.averageDmg + _statBonuses[ability.stat]) > playerInfo.CurrentHealth && alliesAffected.Count > 0)
+            if ((ability.averageDmg + _enemyData.statBonuses[ability.stat]) > playerInfo.CurrentHealth && alliesAffected.Count > 0)
             {
-                hitValue = (ability.averageDmg + _statBonuses[ability.stat]) - playerInfo.CurrentHealth;
+                hitValue = (ability.averageDmg + _enemyData.statBonuses[ability.stat]) - playerInfo.CurrentHealth;
                 var dmgDifference = Math.Abs(hitValue - playerInfo.CurrentHealth);
                 return (hitValue + playersAffected + dmgDifference + 100f) * .25f;
             }
@@ -389,19 +359,19 @@ namespace Start.Scripts.Enemy
         {
             if (playerToAttack)
             {
-                switch (enemyType)
+                switch (_enemyData.attackType)
                 {
                     case "Melee":
                         {
-                            var playersInMeleeRange = GetPlayersInMeleeRange(standingOnTile);
+                            var playersInMeleeRange = GetPlayersInMeleeRange(_standingOnTile);
                             if (playersInMeleeRange.Contains(playerToAttack))
                             {
                                 _combatController.AttackOtherCharacter(this, playerToAttack.GetComponent<PlayerController>());//TODO play animation
-                                hasAttack = false;
+                                _hasAction = false;
                                 break;
                             }
 
-                            hasAttack = false;
+                            _hasAction = false;
                             break;
                         }
                     case "Ranged":
@@ -410,16 +380,16 @@ namespace Start.Scripts.Enemy
                             {
                                 _combatController.AttackOtherCharacter(this, playerToAttack.GetComponent<PlayerController>());//TODO play animation
 
-                                hasAttack = false;
+                                _hasAction = false;
                                 break;
                             }
 
-                            hasAttack = false;
+                            _hasAction = false;
                             break;
                         }
                 }
             }
-            hasAttack = false;
+            _hasAction = false;
         }
 
         /** MoveCharacter()
@@ -431,7 +401,7 @@ namespace Start.Scripts.Enemy
         private void MoveCharacter(OverlayTile tile)
         {
             // checks if enemy exists and that the tile is not the enemies current tile
-            if (gameObject && tile != standingOnTile)
+            if (gameObject && tile != _standingOnTile)
             {
                 _isMoving = true;
             }
@@ -446,7 +416,7 @@ namespace Start.Scripts.Enemy
             {
                 ResetTiles();
                 _isMoving = false;
-                hasMovement = false;
+                _hasMovement = false;
             }
         }
 
@@ -463,7 +433,7 @@ namespace Start.Scripts.Enemy
         private void MoveAlongPath()
         {
             // slows movement for the visual
-            var step = speed * Time.deltaTime;
+            var step = _enemyData.speed * Time.deltaTime;
 
             var zIndex = _path[0].transform.position.z;
 
@@ -486,7 +456,7 @@ namespace Start.Scripts.Enemy
 
             if (_path.Count != 0 || !gameObject) return;
             ResetTiles();
-            hasMovement = false;
+            _hasMovement = false;
             _isMoving = false;
         }
 
@@ -500,7 +470,7 @@ namespace Start.Scripts.Enemy
             foreach (var overlayTile in MapManager.Instance.Map.Values)
             {
                 if (!_rangeFinderTiles.Contains(overlayTile) && !_path.Contains(overlayTile)
-                                                             && overlayTile != standingOnTile)
+                                                             && overlayTile != _standingOnTile)
                 {
                     overlayTile.HideTile();
                 }
@@ -519,7 +489,7 @@ namespace Start.Scripts.Enemy
         {
             var tilePos = tile.transform.position;
             transform.position = new Vector3(tilePos.x, tilePos.y + 0.0001f, tilePos.z);
-            standingOnTile = tile;
+            _standingOnTile = tile;
         }
 
 
@@ -527,148 +497,124 @@ namespace Start.Scripts.Enemy
          * description: sets the initial values of the enemy.
          * @return void
          */
-        private void SetEnemyValues()
+        private void LoadEnemyValues()
         {
-            enemyType = data.enemyType;
-            movement = data.movement;
-            speed = data.speed;
-            health = data.health;
-            maxHealth = data.maxHealth;
-            mana = data.mana;
-            maxMana = data.maxMana;
-            hasAttack = data.hasAttack;
-            hasDisadvantage = data.hasDisadvantage;
-            hasMovement = data.hasMovement;
-            hasAdvantage = data.hasAdvantage;
-            abilities = data.abilities;
-            statType = data.statType;
-            stats = data.stats;
-            weapon = data.weapon;
-            armor = data.armor;
-            CalculateStatBonuses();
-            RollInitiative();
+            if (_enemyData == null)
+            {
+                Debug.LogError("Enemy data is not set. Please assign enemy data before initializing.");
+                return;
+            }
+            _currentHealth = _enemyData.Health;
+            _currentMana = _enemyData.Mana;
+            _hasAction = _enemyData.HasAction;
+            _hasDisadvantage = _enemyData.HasDisadvantage;
+            _hasMovement = _enemyData.HasMovement;
+            _hasAdvantage = _enemyData.HasAdvantage;
+            _hasBonusAction = _enemyData.HasBonusAction;
+            _hasReaction = _enemyData.HasReaction;
+            _hasTurn = _enemyData.HasTurn;
+            _initiative = _enemyData.Initiative;
         }
 
         private void CalculateStatBonuses()
         {
-            for (var i = 0; i < stats.Count; i++)
+            for (var i = 0; i < _enemyData.stats.Count; i++)
             {
-                var stat = stats[i];
+                var stat = _enemyData.stats[i];
                 if (stat == 1)
                 {
-                    _statBonuses.Add(statType[i], -5);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], -5);
                 }
                 if (stat is >= 2 and <= 3)
                 {
-                    _statBonuses.Add(statType[i], -4);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], -4);
                 }
                 if (stat is >= 4 and <= 5)
                 {
-                    _statBonuses.Add(statType[i], -3);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], -3);
                 }
                 if (stat is >= 6 and <= 7)
                 {
-                    _statBonuses.Add(statType[i], -2);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], -2);
                 }
                 if (stat is >= 8 and <= 9)
                 {
-                    _statBonuses.Add(statType[i], -1);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], -1);
                 }
                 if (stat is >= 10 and <= 11)
                 {
-                    _statBonuses.Add(statType[i], 0);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 0);
                 }
                 if (stat is >= 12 and <= 13)
                 {
-                    _statBonuses.Add(statType[i], 1);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 1);
                 }
                 if (stat is >= 14 and <= 15)
                 {
-                    _statBonuses.Add(statType[i], 2);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 2);
                 }
                 if (stat is >= 16 and <= 17)
                 {
-                    _statBonuses.Add(statType[i], 3);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 3);
                 }
                 if (stat is >= 18 and <= 19)
                 {
-                    _statBonuses.Add(statType[i], 4);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 4);
                 }
                 if (stat is >= 20 and <= 21)
                 {
-                    _statBonuses.Add(statType[i], 5);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 5);
                 }
                 if (stat is >= 22 and <= 23)
                 {
-                    _statBonuses.Add(statType[i], 6);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 6);
                 }
                 if (stat is >= 24 and <= 25)
                 {
-                    _statBonuses.Add(statType[i], 7);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 7);
                 }
                 if (stat is >= 26 and <= 27)
                 {
-                    _statBonuses.Add(statType[i], 8);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 8);
                 }
                 if (stat is >= 28 and <= 29)
                 {
-                    _statBonuses.Add(statType[i], 9);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 9);
                 }
                 if (stat == 30)
                 {
-                    _statBonuses.Add(statType[i], 10);
+                    _enemyData.statBonuses.Add(_enemyData.statType[i], 10);
                 }
 
             }
         }
 
-        /** RollInitiative()
-         * description: gets the initiative of the current enemy.
-         * @return void
-         */
-        private void RollInitiative()
+        public void Initialize(EnemyData enemyData)
         {
-            var rand = new Random();
-            initiative = rand.Next(1, 20);
-        }
-
-        public void Initialize(GameManager gameManager)
-        {
+            _enemyData = enemyData;
             // Set up AI strategy based on enemy type
-            _aiStrategy = AIStrategyFactory.GetStrategy(enemyType);
+            _aiStrategy = AIStrategyFactory.GetStrategy(_enemyData.attackType);
 
             // Initialize from data if available
-            if (data != null)
+            if (_enemyData != null)
             {
-                SetEnemyValues();
+                LoadEnemyValues();
             }
+            OnEnemyLoaded?.Invoke();
         }
 
-        public void OnGameStateChanged(GameManager.GameState newState)
-        {
-            // Handle game state changes if needed
-            switch (newState)
-            {
-                case GameManager.GameState.Combat:
-                    // Reset state for new combat
-                    _strategyFound = false;
-                    break;
-                case GameManager.GameState.Exploration:
-                    // Reset movement and attack flags
-                    hasMovement = true;
-                    hasAttack = true;
-                    break;
-            }
-        }
-
-        private void OnCombatStarted()
+        protected override void OnCombatStarted()
         {
             // Reset for combat
-            hasMovement = true;
-            hasAttack = true;
+            _hasMovement = true;
+            _hasAction = true;
+            _hasBonusAction = true;
+            _hasReaction = true;
+            _path.Clear();
+            _isMoving = false;
             _strategyFound = false;
         }
-        private void OnCombatEnded()
+        protected override void OnCombatEnded()
         {
             // Reset after combat
             _path.Clear();
@@ -676,15 +622,9 @@ namespace Start.Scripts.Enemy
             _strategyFound = false;
         }
 
-        // Provides access to stat bonuses for strategies
-        public int GetStatBonus(string statName)
-        {
-            return _statBonuses.ContainsKey(statName) ? _statBonuses[statName] : 0;
-        }
-
         public bool CheckIfTileIsPlayerTile(OverlayTile tile)
         {
-            foreach (var player in _gameManager.Party.PartyControllers)
+            foreach (var player in _gameManager.Party.Party)
             {
                 // Check if the tile matches the player's standing tile
                 if (tile == player.StandingOnTile)
@@ -712,12 +652,6 @@ namespace Start.Scripts.Enemy
                 }
             }
             return players;
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

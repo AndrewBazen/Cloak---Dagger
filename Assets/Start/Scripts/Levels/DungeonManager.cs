@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Start.Scripts.Level
+namespace Start.Scripts.Levels
 {
     public class DungeonManager : MonoBehaviour
     {

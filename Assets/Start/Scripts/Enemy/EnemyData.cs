@@ -10,22 +10,31 @@ namespace Start.Scripts.Enemy
     [CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/Enemy", order = 1)]
     public class EnemyData : ScriptableObject
     {
-        [SerializeField] public InventoryItemData weapon;
-        [SerializeField] public InventoryItemData armor;
-        
-        public List<Ability> abilities;
-        public List<string> statType;
-        public List<int> stats;
-        public int health;
-        public int maxHealth;
-        public int mana;
-        public int maxMana;
-        public float speed;
-        public int movement;
-        public string enemyType;
-        public bool hasDisadvantage;
-        public bool hasAdvantage;
-        public bool hasMovement;
-        public bool hasAttack;
+        [SerializeField] public InventoryItemData EquippedWeapon;
+        [SerializeField] public InventoryItemData EquippedArmor;
+        public List<Ability> Abilities;
+        public List<string> StatType;
+        public List<int> Stats;
+        public Dictionary<string, int> StatBonuses;
+        public OverlayTile TilePosition;
+        public Vector3 Position;
+        public string AttackType;
+        public int Health;
+        public int MaxHealth;
+        public int Mana;
+        public int MaxMana;
+        public float Speed;
+        public int Movement;
+        public int BonusToHit;
+        public bool HasDisadvantage;
+        public bool HasAdvantage;
+        public bool HasMovement;
+        public bool HasAttack;
+        public bool HasBonusAction;
+        public bool HasAction;
+        public bool HasReaction;
+        public bool HasTurn;
+        public int Initiative;
+        public int BaseArmorClass;
     }
 }

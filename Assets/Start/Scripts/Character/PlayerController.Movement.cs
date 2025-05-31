@@ -1,6 +1,6 @@
 using UnityEngine;
 using Start.Scripts.Map;
-using Start.Scripts.BaseClasses;
+using Start.Scripts.Interfaces;
 
 namespace Start.Scripts.Character
 {
@@ -8,9 +8,9 @@ namespace Start.Scripts.Character
     {
         private void HandleMovement()
         {
-            if (!_isMoving && _overlayTile != null && standingOnTile != null)
+            if (!_isMoving && _overlayTile != null && StandingOnTile != null)
             {
-                _path = _gameManager.PathFinder.FindPath(standingOnTile, _overlayTile, _rangeFinderTiles, false);
+                _path = _gameManager.PathFinder.FindPath(StandingOnTile, _overlayTile, _rangeFinderTiles, false);
                 HighlightPath();
             }
 
@@ -33,7 +33,7 @@ namespace Start.Scripts.Character
 
         private void MoveAlongPath()
         {
-            var step = speed * Time.deltaTime;
+            var step = characterData.Speed * Time.deltaTime;
             var zIndex = _path[0].transform.position.z;
 
             transform.position = Vector2.MoveTowards(transform.position, _path[0].transform.position, step);
@@ -48,8 +48,8 @@ namespace Start.Scripts.Character
             if (_path.Count == 0)
             {
                 _isMoving = false;
-                hasMovement = false;
-                GetInRangeTiles();
+                characterData.HasMovement = false;
+                _rangeFinderTiles = _gameManager.RangeFinder.GetRangeTiles(StandingOnTile.Grid2DLocation, characterData.Movement);
             }
         }
 
@@ -59,16 +59,7 @@ namespace Start.Scripts.Character
 
             var tilePos = tile.transform.position;
             transform.position = new Vector3(tilePos.x, tilePos.y + 0.0001f, tilePos.z);
-            standingOnTile = tile;
-        }
-
-        private void GetInRangeTiles()
-        {
-            if (characterData == null || standingOnTile == null) return;
-
-            _rangeFinderTiles = GetTilesInRange(
-                new Vector2Int(standingOnTile.gridLocation.x, standingOnTile.gridLocation.y),
-                CharacterMovementRange);
+            StandingOnTile = tile;
         }
 
         private void HighlightPath()

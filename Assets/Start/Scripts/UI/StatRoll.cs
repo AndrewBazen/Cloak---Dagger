@@ -1,4 +1,4 @@
-﻿
+
 using System.Collections.Generic;
 using Start.Scripts.Dice;
 using TMPro;
@@ -47,7 +47,7 @@ namespace Start.Scripts.UI
                     dropdown.options[currIndex].text = stat.ToString();
                 }
                 statDropDownController.currOptionPool.Add(new TMP_Dropdown.OptionData(stat.ToString()), currIndex);
-                _player.stats.Add(stat);
+                _player._enemyData.stats.Add(stat);
             }
         }
     }

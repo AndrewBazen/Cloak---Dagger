@@ -1,46 +1,48 @@
 using System.Collections.Generic;
 using Start.Scripts.Classes;
 using Start.Scripts.Inventory;
-using Start.Scripts.Level;
+using Start.Scripts.Levels;
 using UnityEngine;
 
 namespace Start.Scripts.Character
 {
     [CreateAssetMenu(fileName = "NewCharacter", menuName = "RPG/Character Info", order = 1)]
-    public class CharacterInfoData : ScriptableObject
+    public class CharacterInfoData : ScriptableObject 
     {
-        public string id;
-        public PlayerClass playerClass;
-        public int startExp = 100;
-        public ILevel currentLevel;
-        public OverlayTile CurentTile;
+        public string Id { get; set; }
+        public PlayerClass PlayerClass { get; set; }
+        public Level CurrentLevel { get; set; }
+        public OverlayTile TilePos { get; set; }
 
-        public InventoryHolder inventory;
-        public List<InventoryItemData> inventoryItems;
+        public InventoryHolder Inventory { get; set; }
+        public List<InventoryItemData> InventoryItems { get; set; }
 
-        public int health = 10;
-        public int maxHealth = 10;
-        public int mana = 10;
-        public int maxMana = 10;
-        public int special;
-        public int maxSpecial;
-        public int experience;
-        public int maxExperience;
-        public int bonusToHit;
-        public int armorClass = 10;
+        public int Health { get; set; }
+        public int MaxHealth { get; set; }
+        public int Mana { get; set; }
+        public int MaxMana { get; set; }
+        public int Special { get; set; }
+        public int MaxSpecial { get; set; }
+        public int Experience { get; set; }
+        public int MaxExperience { get; set; }
+        public int BonusToHit { get; set; }
+        public int ArmorClass { get; set; }
+        public float Speed { get; set; }
+        public int Movement { get; set; }
+        public int Initiative { get; set; }
 
-        public InventoryItemData equippedWeapon;
-        public InventoryItemData equippedArmor;
-        public List<Ability> abilities;
+        public InventoryItemData EquippedWeapon { get; set; }
+        public InventoryItemData EquippedArmor { get; set; }
+        public List<Ability> Abilities { get; set; }
 
-        public List<int> stats;
-        public Dictionary<string, int> skills;
-        public List<int> modifiers;
+        public Dictionary<string, int> Stats { get; set; }
+        public Dictionary<string, int> StatBonuses { get; set; }
 
-        public bool hasDisadvantage;
-        public bool hasAdvantage;
-        public bool hasMovement;
-        public bool hasAttack;
+        public bool HasDisadvantage { get; set; }
+        public bool HasAdvantage { get; set; }
+        public bool HasMovement { get; set; }
+        public bool HasAction { get; set; }
     }
+
 }
 

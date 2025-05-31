@@ -6,31 +6,52 @@ using System.Collections.Generic;
 using Start.Scripts.Character;
 using Start.Scripts.Enemy;
 using Start.Scripts.Combat;
+using Start.Scripts.BaseClasses;
 using UnityEngine;
 
 namespace Start.Scripts.Game
 {
     public class CombatManager : MonoBehaviour
     {
+        public static CombatManager Instance { get; private set; }
         public event Action OnCombatStarted;
         public event Action OnCombatEnded;
         public event Action OnCharacterDamaged;
         public event Action OnEnemyDamaged;
 
-        private List<GameObject> party;
-        private List<GameObject> enemies;
-        private Queue<MonoBehaviour> turnQueue;
-        private MonoBehaviour currentTurnActor;
-        private GameObject _dmgText;
-        [SerializeField] private GameObject dmgPrefab;
+        private List<Actor> _party;
+        private List<Actor> _enemies;
+        private Queue<Actor> _turnQueue;
+        private MonoBehaviour _currentTurnActor;
+        private GameManager _gameManager;
+
+
+        private void Awake()
+        {
+
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            Initialize();
+            DontDestroyOnLoad(gameObject);
+            if (GameManager.Instance == null)
+            {
+                Debug.LogError("GameManager instance is null. CombatManager cannot function without it.");
+                return;
+            }
+            _gameManager = GameManager.Instance;
+        }
 
         public void Initialize()
         {
-            party = new List<GameObject>(GameManager.Instance.Party.PartyObjects);
-            enemies = new List<GameObject>(GameManager.Instance.Enemies.EnemyObjects);
-            turnQueue = new Queue<MonoBehaviour>();
+            _party = _gameManager.Party.Actors;
+            _enemies = _gameManager.Enemies.Actors;
+            _turnQueue = new Queue<Actor>();
             BuildTurnOrder();
-            if (turnQueue.Count == 0)
+            if (_turnQueue.Count == 0)
             {
                 Debug.LogWarning("No actors in turn queue. Combat cannot start.");
                 return;
@@ -39,10 +60,10 @@ namespace Start.Scripts.Game
 
         private void BuildTurnOrder()
         {
-            turnQueue.Clear();
-            List<GameObject> all = new();
-            all.AddRange(party);
-            all.AddRange(enemies);
+            _turnQueue.Clear();
+            List<Actor> all = new();
+            all.AddRange(_party);
+            all.AddRange(_enemies);
 
             all.Sort((a, b) =>
             {
@@ -52,75 +73,74 @@ namespace Start.Scripts.Game
             });
 
             foreach (var actor in all)
-                turnQueue.Enqueue(actor.GetComponent<MonoBehaviour>());
+                _turnQueue.Enqueue(actor);
 
             StartNextTurn();
             OnCombatStarted?.Invoke();
         }
 
-        private int GetInitiative(GameObject actor)
+        private int GetInitiative(Actor actor)
         {
-            if (actor.GetComponent<PlayerController>())
+            if (actor.GetType() == typeof(PlayerController))
             {
                 return actor.GetComponent<PlayerController>().Initiative;
             }
-            return actor.GetComponent<EnemyController>().initiative;
+            return actor.GetComponent<EnemyController>().Initiative;
         }
 
         public void EndTurn()
         {
-            if (currentTurnActor == null)
+            if (_currentTurnActor == null)
             {
                 Debug.LogWarning("Current turn actor is null. Cannot end turn.");
                 return;
             }
-            currentTurnActor.GetComponent<CombatController>().StopTurn();
+            _currentTurnActor.GetComponent<CombatController>().StopTurn();
 
             StartNextTurn();
         }
 
-        public void DamageCharacter(PlayerController player, int damage)
+        // updated to use the Actor class which is agnostic of type of actor
+        public void DamageActor(Actor actor, int damage)
         {
-            if (player == null) return;
-            _dmgText = Instantiate(dmgPrefab, player.gameObject.transform);
-            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(damage.ToString());
+            if (actor == null) return;
+            var dmgText = Instantiate(_gameManager.DamageTextPrefab, actor.gameObject.transform);
+            dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(damage.ToString());
             OnCharacterDamaged?.Invoke();
-        }
-
-        public void DamageEnemy(EnemyController enemy, int damage)
-        {
-            if (enemy == null) return;
-            _dmgText = Instantiate(dmgPrefab, enemy.gameObject.transform);
-            _dmgText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(damage.ToString());
         }
 
         private void StartNextTurn()
         {
-            if (turnQueue.Count == 0)
+            if (_turnQueue.Count == 0)
             {
                 EndCombat();
                 return;
             }
 
-            currentTurnActor = turnQueue.Dequeue();
-            if (currentTurnActor == null)
+            _currentTurnActor = _turnQueue.Dequeue();
+            if (_currentTurnActor == null)
             {
                 Debug.LogWarning("Current turn actor is null. Skipping turn.");
                 StartNextTurn();
                 return;
             }
-            currentTurnActor.GetComponent<CombatController>().StartTurn();
+            _currentTurnActor.GetComponent<CombatController>().StartTurn();
+        }
+
+        private void StartCombat()
+        {
+            if (_party.Count == 0 || _enemies.Count == 0)
+            {
+                Debug.LogWarning("Cannot start combat without party or enemies.");
+                return;
+            }
+            BuildTurnOrder();
+            OnCombatStarted?.Invoke();
         }
 
         private void EndCombat()
         {
             OnCombatEnded?.Invoke();
-        }
-
-        public int RollInitiative(CharacterInfoData characterData)
-        {
-            // Example initiative roll, can be replaced with actual game logic
-            return UnityEngine.Random.Range(1, 21);
         }
     }
 }

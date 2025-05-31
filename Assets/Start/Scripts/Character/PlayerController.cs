@@ -1,18 +1,15 @@
 using System.Collections.Generic;
-using System.ComponentModel;
 using UnityEngine;
-using Start.Scripts.Dice;
 using Start.Scripts.Enemy;
 using Start.Scripts.Game;
 using Start.Scripts.Inventory;
 using Start.Scripts.UI;
 using Start.Scripts.Combat;
-using System.Linq;
 using Start.Scripts.BaseClasses;
 
 namespace Start.Scripts.Character
 {
-    public partial class PlayerController : Controller, INotifyPropertyChanged, IGameManagerAware
+    public partial class PlayerController : Actor
     {
         [Header("References")]
         public GameObject Cursor;
@@ -20,56 +17,10 @@ namespace Start.Scripts.Character
         public GameObject PlayerContainer => playerContainer;
         public GameObject EnemyContainer => enemyContainer;
         public GameObject InventoryContainer => inventoryContainer;
-        public int Initiative
-        {
-            get => initiative;
-            set
-            {
-                initiative = value;
-                OnPropertyChanged(nameof(Initiative));
-            }
-        }
         public List<GameObject> Enemies
         {
             get => _enemies;
             set => _enemies = value;
-        }
-        public OverlayTile StandingOnTile
-        {
-            get => standingOnTile;
-            set
-            {
-                standingOnTile = value;
-                OnPropertyChanged(nameof(StandingOnTile));
-            }
-        }
-        public int CurrentHealth
-        {
-            get => currentHealth;
-            set
-            {
-                currentHealth = value;
-                OnPropertyChanged(nameof(CurrentHealth));
-            }
-        }
-        public bool HasMovement
-        {
-            get => hasMovement;
-            set
-            {
-                hasMovement = value;
-                OnPropertyChanged(nameof(HasMovement));
-            }
-        }
-
-        public bool HasAttack
-        {
-            get => hasAttack;
-            set
-            {
-                hasAttack = value;
-                OnPropertyChanged(nameof(HasAttack));
-            }
         }
 
         [SerializeField] private GameObject playerContainer;
@@ -77,16 +28,7 @@ namespace Start.Scripts.Character
         [SerializeField] private GameObject inventoryContainer;
 
         // Runtime state formerly from CharacterInfo
-        private int currentHealth;
-        private bool hasMovement;
-        private bool hasAttack;
-        private OverlayTile standingOnTile;
-        private int initiative;
         private StatDisplay statDisplay;
-
-        [Header("Settings")]
-        public float speed;
-        private const int CharacterMovementRange = 6;
 
         [Header("State")]
         private List<GameObject> _enemies;
@@ -95,36 +37,24 @@ namespace Start.Scripts.Character
         private List<OverlayTile> _rangeFinderTiles;
         private OverlayTile _overlayTile;
         private bool _isMoving;
-
         private CombatController _combatController;
         private static Camera _camera;
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public PlayerController()
         {
             // WARNING: Unity does not guarantee constructor execution like regular C# classes
         }
 
-        void IGameManagerAware.Initialize(GameManager gameManager)
-        {
-            throw new System.NotImplementedException();
-        }
-
-
         private void Awake()
         {
             _camera = Camera.main;
             _enemies = new List<GameObject>();
             InitializeComponents();
-            LoadCharacterStats();
-            InitializePlayer();
             SubscribeToEvents();
         }
 
         protected override void Start()
         {
-            InitializeController();
             if (characterData == null)
             {
                 Debug.LogError("Character data is not set. Please assign a CharacterInfoData object.");
@@ -135,7 +65,6 @@ namespace Start.Scripts.Character
 
             if (_gameManager == null && GameManager.Instance != null)
             {
-                InitializeParty();
                 if (statDisplay != null)
                 {
                     statDisplay.UpdateStats(characterData);
@@ -154,52 +83,15 @@ namespace Start.Scripts.Character
             _camera = Camera.main;
         }
 
-        public void OnGameStateChanged(GameManager.GameState newState)
-        {
-            //update game state logic here if needed
-        }
 
-        private void InitializePlayer()
+        protected override void InitializeActor()
         {
-            if (characterData == null || string.IsNullOrEmpty(characterData.id)) return;
+            if (characterData == null || string.IsNullOrEmpty(characterData.Id)) return;
 
             var statController = new StatController();
-            statController.UpdateStats(characterData, characterData.skills);
+            statController.UpdateStats(characterData, );
 
-            inventoryContainer = GameObject.FindGameObjectWithTag("inventory");
-            characterData.inventory = inventoryContainer?.GetComponent<InventoryHolder>();
-
-            enemyContainer = GameObject.FindGameObjectWithTag("Enemies");
-            playerContainer = GameObject.FindGameObjectWithTag("Players");
-            Cursor = GameObject.FindGameObjectWithTag("cursor");
-
-            RollInitiative();
-        }
-
-        private void InitializeParty()
-        {
-            if (_gameManager != null)
-            {
-                _gameManager.Party.AddToParty(this.gameObject);
-                _gameManager.Party.OnCharacterStatsChanged += (stats) => characterData.stats = stats;
-                _gameManager.Party.OnCharacterInventoryChanged += (inventory) => characterData.inventory = inventory;
-            }
-        }
-
-        private void LoadCharacterStats()
-        {
-            currentHealth = characterData.health;
-            hasMovement = true;
-            hasAttack = true;
-            initiative = 0;
-            standingOnTile = null;
-        }
-
-        private void RollInitiative()
-        {
-            var diceRoll = new DiceRoll();
-            var initiativeRoll = diceRoll.RollDice("D20", 1).Keys.FirstOrDefault();
-            initiative = initiativeRoll;
+            characterData.Inventory = inventoryContainer?.GetComponent<InventoryHolder>();
         }
     }
 }

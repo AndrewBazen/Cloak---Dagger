@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using Start.Scripts.Game;
 
 namespace Start.Scripts.Enemy.Strategies
 {

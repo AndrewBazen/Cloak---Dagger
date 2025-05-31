@@ -3,18 +3,19 @@ using Start.Scripts.Character;
 using Start.Scripts.Dice;
 using Start.Scripts.Enemy;
 using Start.Scripts.Game;
+using Start.Scripts.Interfaces;
 using UnityEngine;
-using Start.Scripts.BaseClasses;
 using UnityEngine.SceneManagement;
 
 namespace Start.Scripts.Combat
 {
-    public class CombatController : Controller
+    public class CombatController : Component, IManagable
     {
         public bool isTurn;
         private DiceRoll _diceRoll;
         private PlayerController _playerController;
         private EnemyController _enemyController;
+        private GameManager _gameManager;
 
         public void OnGameStateChanged(GameManager.GameState newState)
         {
@@ -29,9 +30,8 @@ namespace Start.Scripts.Combat
             }
         }
 
-        protected override void Start()
+        private void Start()
         {
-            InitializeController();
             if (gameObject.CompareTag("Player"))
             {
                 _playerController = gameObject.GetComponent<PlayerController>();
@@ -47,13 +47,13 @@ namespace Start.Scripts.Combat
         {
             if (gameObject.CompareTag("Player"))
             {
-                _playerController.HasAttack = true;
+                _playerController.HasAction = true;
                 _playerController.HasMovement = true;
                 isTurn = true;
             }
             else if (gameObject.CompareTag("enemy"))
             {
-                _enemyController.HasAttack = true;
+                _enemyController.HasAction = true;
                 _enemyController.HasMovement = true;
                 isTurn = true;
             }
@@ -63,7 +63,7 @@ namespace Start.Scripts.Combat
         {
             if (gameObject.CompareTag("Player"))
             {
-                _playerController.HasAttack = false;
+                _playerController.HasAction = false;
                 _playerController.HasMovement = false;
                 isTurn = false;
                 // foreach (var tile in MapManager.Instance.Map.Values)
@@ -73,7 +73,7 @@ namespace Start.Scripts.Combat
             }
             else if (gameObject.CompareTag("enemy"))
             {
-                _enemyController.HasAttack = false;
+                _enemyController.HasAction = false;
                 _enemyController.HasMovement = false;
                 isTurn = false;
                 // foreach (var tile in MapManager.Instance.Map.Values)
@@ -89,7 +89,7 @@ namespace Start.Scripts.Combat
             {
                 // Use GameManager for attack resolution
                 var hitRoll = _diceRoll.RollToHit(player);
-                if (hitRoll < other.armorClass)
+                if (hitRoll < other.ArmorClass)
                 {
                     _gameManager.Combat.DamageEnemy(other, 0); // No damage on miss
                     return;
@@ -101,7 +101,7 @@ namespace Start.Scripts.Combat
             {
                 // Fallback to legacy behavior
                 var hitRoll = _diceRoll.RollToHit(player);
-                if (hitRoll < other.armorClass)
+                if (hitRoll < other.ArmorClass)
                 {
                     _gameManager.Combat.DamageEnemy(other, 0); // No damage on miss
                     return;
@@ -153,13 +153,13 @@ namespace Start.Scripts.Combat
         }
         private void TakeDamage(int dmg, EnemyController other)
         {
-            if (dmg >= other.health)
+            if (dmg >= other.CurrentHealth)
             {
                 _gameManager.Enemies.RemoveEnemy(other);
                 gameObject.GetComponent<PlayerController>()?.Enemies.Remove(other.gameObject);
                 Destroy(other.gameObject);
             }
-            other.health -= dmg;
+            other.CurrentHealth -= dmg;
             _gameManager.Combat.DamageEnemy(other, dmg);
         }
 
