@@ -12,7 +12,10 @@ namespace Start.Scripts.Classes
         public Sprite playerPic;
         public string className = "";
         public string classDescription = "";
-        public List<int> statModifiers;
+        public Dictionary<string, int> statModifiers;
+        public int baseHealth;
+        public int baseMana;
+        public int baseArmorClass;
         public InventoryItemData weapon;
         public InventoryItemData armor;
         public List<Ability> abilities;

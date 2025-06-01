@@ -7,6 +7,7 @@ using Start.Scripts.AI;
 using System.Collections.Generic;
 using Start.Scripts.Classes;
 using Start.Scripts.Character;
+using Start.Scripts.Levels;
 
 namespace Start.Scripts.Game
 {
@@ -24,14 +25,19 @@ namespace Start.Scripts.Game
         public JobSystemRangeFinder RangeFinder => JobSystemRangeFinder.Instance;
         public GameObject DamageTextPrefab => _dmgPrefab;
         public GameObject Cursor => _cursor;
+        public GameObject EnemyPrefab => _enemyPrefab;
+        public GameObject PlayerPrefab => _playerPrefab;
+        public GameObject EnemyContainer => _enemyContainer;
+        public GameObject PlayerContainer => _playerContainer;
         public enum GameState { MainMenu, Initialization, Exploration, Combat, Paused, GameOver }
         private GameState _currentGameState;
 
         private GameState _previousGameState;
 
         public GameState CurrentGameState => _currentGameState;
-        private SaveManager _saveManager;
+        public LevelData CurrentLevelData => _currentLevelData;
         public SaveManager SaveManager => _saveManager;
+        public GameObject InventoryContainer => _inventoryContainer;
         public event System.Action OnMapGenerated;
         public event System.Action OnGameStateChanged;
 
@@ -40,13 +46,19 @@ namespace Start.Scripts.Game
         [SerializeField] private PartyManager _partyManager;
         [SerializeField] private EnemyManager _enemyManager;
         [SerializeField] private GameObject _playerPrefab;
+        [SerializeField] private GameObject _enemyPrefab;
         [SerializeField] private GameObject _playerContainer;
+        [SerializeField] private GameObject _enemyContainer;
         [SerializeField] private MapManager _mapManager;
         [SerializeField] private CombatManager _combatManager;
         [SerializeField] private InputManager _inputManager;
+        [SerializeField] private SaveManager _saveManager;
         [SerializeField] private UIManager _uiManager;
         [SerializeField] private SceneEventManager _sceneEventManager;
         [SerializeField] private GameObject _cursor;
+        [SerializeField] private GameObject _inventoryContainer;
+
+        private LevelData _currentLevelData;
 
 
 
@@ -61,6 +73,22 @@ namespace Start.Scripts.Game
             Instance = this;
             InitializeManagers();
             DontDestroyOnLoad(gameObject);
+        }
+
+        public void SetCurrentLevelData(LevelData levelData)
+        {
+            _currentLevelData = levelData;
+        }
+
+        public void LoadGame(SaveData saveData)
+        {
+            _currentLevelData = saveData.CurrentLevel;
+            _partyManager.SpawnPlayers(saveData.Party);
+            _combatManager.SetTurnOrder(saveData.TurnOrder);
+            _partyManager.SetActivePlayer(saveData.ActivePlayer);
+            _enemyManager.SpawnEnemies(saveData.Enemies);
+            _currentGameState = saveData.CurrentGameState;
+            _uiManager.ShowGameplayUI();
         }
 
         private void Start()
@@ -94,12 +122,6 @@ namespace Start.Scripts.Game
         {
             _currentGameState = GameState.MainMenu;
             _uiManager.ShowMainMenu();
-        }
-
-        public void LoadGame(string saveName)
-        {
-            _currentGameState = GameState.Exploration;
-            _uiManager.ShowGameplayUI();
         }
 
         public void StartNewGame()
@@ -163,6 +185,7 @@ namespace Start.Scripts.Game
 
         private void LoadLevel(int level)
         {
+            
             _previousGameState = _currentGameState;
             _currentGameState = GameState.Exploration;
             string sceneName = $"Level_{level}";
@@ -196,6 +219,12 @@ namespace Start.Scripts.Game
                 _enemyManager.SpawnEnemiesForLevel(1);
                 _uiManager.ShowGameplayUI();
             }
+        }
+
+        public void HandleSaveLoaded(SaveData saveData)
+        {
+            _currentLevelData = saveData.CurrentLevel;
+            LoadGame(saveData);
         }
 
         public void Confirm()

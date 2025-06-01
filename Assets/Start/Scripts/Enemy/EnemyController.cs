@@ -23,21 +23,13 @@ namespace Start.Scripts.Enemy
         private Strategy _strategy;
         private bool _isMoving;
         private bool _strategyFound;
-        private bool _hasTurn;
-        private bool _hasDisadvantage;
-        private bool _hasAdvantage;
-        private bool _hasMovement;
-        private bool _hasAction;
-        private bool _hasReaction;
-        private bool _hasBonusAction;
-        private int _initiative;
-        private int _currentHealth;
-        private int _currentMana;
         private IAIStrategy _aiStrategy;
         private EnemyData _enemyData;
         private OverlayTile _standingOnTile;
         [SerializeField] private GameObject playerContainer;
         [SerializeField] private GameObject enemyContainer;
+
+        public EnemyData EnemyData => _enemyData;
 
         public event Action OnEnemyLoaded;
 
@@ -69,7 +61,7 @@ namespace Start.Scripts.Enemy
                     _strategy = _aiStrategy.EvaluateStrategy(this);
                     _strategyFound = true;
                 }
-                if (_hasMovement && _strategyFound)
+                if (EnemyData.HasMovement && _strategyFound)
                 {
                     // if player is not in range and enemy is not moving
                     if (!_isMoving)
@@ -80,11 +72,11 @@ namespace Start.Scripts.Enemy
                     }
                     MoveCharacter(_strategy.TargetTile);
                 }
-                if (_hasAction && !_hasMovement)
+                if (EnemyData.HasAction && !EnemyData.HasMovement)
                 {
                     AttackPlayer(_strategy.PlayerToAttack);
                 }
-                if (!_hasMovement && !_hasAction)
+                if (!EnemyData.HasMovement && !EnemyData.HasAction)
                 {
                     EndTurn();
                 }
@@ -372,11 +364,11 @@ namespace Start.Scripts.Enemy
                             if (playersInMeleeRange.Contains(playerToAttack))
                             {
                                 _combatController.AttackOtherCharacter(this, playerToAttack.GetComponent<PlayerController>());//TODO play animation
-                                _hasAction = false;
+                                EnemyData.HasAction = false;
                                 break;
                             }
 
-                            _hasAction = false;
+                            EnemyData.HasAction = false;
                             break;
                         }
                     case "Ranged":
@@ -385,16 +377,16 @@ namespace Start.Scripts.Enemy
                             {
                                 _combatController.AttackOtherCharacter(this, playerToAttack.GetComponent<PlayerController>());//TODO play animation
 
-                                _hasAction = false;
+                                EnemyData.HasAction = false;
                                 break;
                             }
 
-                            _hasAction = false;
+                            EnemyData.HasAction = false;
                             break;
                         }
                 }
             }
-            _hasAction = false;
+            EnemyData.HasAction = false;
         }
 
         /** MoveCharacter()
@@ -421,7 +413,7 @@ namespace Start.Scripts.Enemy
             {
                 ResetTiles();
                 _isMoving = false;
-                _hasMovement = false;
+                EnemyData.HasMovement = false;
             }
         }
 
@@ -455,7 +447,7 @@ namespace Start.Scripts.Enemy
 
             if (_path.Count != 0 || !gameObject) return;
             ResetTiles();
-            _hasMovement = false;
+            EnemyData.HasMovement = false;
             _isMoving = false;
         }
 
@@ -489,30 +481,6 @@ namespace Start.Scripts.Enemy
             var tilePos = tile.transform.position;
             transform.position = new Vector3(tilePos.x, tilePos.y + 0.0001f, tilePos.z);
             _standingOnTile = tile;
-        }
-
-
-        /** SetEnemyValues()
-         * description: sets the initial values of the enemy.
-         * @return void
-         */
-        private void LoadEnemyValues()
-        {
-            if (_enemyData == null)
-            {
-                Debug.LogError("Enemy data is not set. Please assign enemy data before initializing.");
-                return;
-            }
-            _currentHealth = _enemyData.Health;
-            _currentMana = _enemyData.Mana;
-            _hasAction = _enemyData.HasAction;
-            _hasDisadvantage = _enemyData.HasDisadvantage;
-            _hasMovement = _enemyData.HasMovement;
-            _hasAdvantage = _enemyData.HasAdvantage;
-            _hasBonusAction = _enemyData.HasBonusAction;
-            _hasReaction = _enemyData.HasReaction;
-            _hasTurn = _enemyData.HasTurn;
-            _initiative = _enemyData.Initiative;
         }
 
         private void CalculateStatBonuses()
@@ -597,7 +565,6 @@ namespace Start.Scripts.Enemy
             // Initialize from data if available
             if (_enemyData != null)
             {
-                LoadEnemyValues();
                 CalculateStatBonuses();
             }
             OnEnemyLoaded?.Invoke();
@@ -606,10 +573,10 @@ namespace Start.Scripts.Enemy
         protected override void OnCombatStarted()
         {
             // Reset for combat
-            _hasMovement = true;
-            _hasAction = true;
-            _hasBonusAction = true;
-            _hasReaction = true;
+            EnemyData.HasMovement = true;
+            EnemyData.HasAction = true;
+            EnemyData.HasBonusAction = true;
+            EnemyData.HasReaction = true;
             _path.Clear();
             _isMoving = false;
             _strategyFound = false;

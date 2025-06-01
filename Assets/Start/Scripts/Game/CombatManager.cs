@@ -53,7 +53,6 @@ namespace Start.Scripts.Game
             _party = _gameManager.Party.Party;
             _enemies = _gameManager.Enemies.CurrentEnemies;
             _turnQueue = new Queue<Actor>();
-            BuildTurnOrder();
             if (_turnQueue.Count == 0)
             {
                 Debug.LogWarning("No actors in turn queue. Combat cannot start.");
@@ -80,6 +79,19 @@ namespace Start.Scripts.Game
 
             StartNextTurn();
             OnCombatStarted?.Invoke();
+        }
+
+        public void SetTurnOrder(List<Actor> turnOrder)
+        {
+            _turnQueue.Clear();
+            foreach (var actor in turnOrder)
+            {
+                _turnQueue.Enqueue(actor);
+            }
+            foreach (var actor in _enemies)
+            {
+                _turnQueue.Enqueue(actor);
+            }
         }
 
         private int GetInitiative(Actor actor)

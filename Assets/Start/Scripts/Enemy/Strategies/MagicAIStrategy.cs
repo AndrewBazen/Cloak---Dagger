@@ -11,11 +11,9 @@ namespace Start.Scripts.Enemy.Strategies
     {
         public override Strategy EvaluateStrategy(EnemyController enemy)
         {
-            var currentTile = enemy.standingOnTile;
-            var bestStrategy = new Strategy();
-
+            var currentTile = enemy.StandingOnTile;
             // Check if we have any abilities to use
-            if (enemy.abilities.Count > 0 && enemy.mana > 0)
+            if (enemy.EnemyData.Abilities.Count > 0 && enemy.CurrentMana > 0)
             {
                 // Find the best ability to use
                 var ability = FindBestAbility(enemy);
@@ -48,7 +46,7 @@ namespace Start.Scripts.Enemy.Strategies
         {
             //TODO: adjust to account for friendly units and AOE abilities
             // Simple placeholder that just returns the first ability with enough mana cost
-            return enemy.abilities.FirstOrDefault(a => a.manaCost <= enemy.mana);
+            return enemy.EnemyData.Abilities.FirstOrDefault(a => a.manaCost <= enemy.CurrentMana);
         }
         /// <summary>
         /// Finds the best target for an ability and calculates its value.
@@ -57,7 +55,7 @@ namespace Start.Scripts.Enemy.Strategies
         {
             // This is a placeholder implementation
             var abilityRange = ability.attackRange > 0 ? ability.attackRange : 2;
-            var playersInRange = GetPlayersInRange(enemy.standingOnTile, abilityRange);
+            var playersInRange = GetPlayersInRange(enemy.StandingOnTile, abilityRange);
             if (playersInRange.Count == 0)
                 return (null, -100000);
 

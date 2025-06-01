@@ -14,11 +14,11 @@ namespace Start.Scripts.Enemy.Strategies
         private const int OptimalRange = 3; // The ideal distance for ranged attacks
         public override Strategy EvaluateStrategy(EnemyController enemy)
         {
-            var currentTile = enemy.standingOnTile;
+            var currentTile = enemy.StandingOnTile;
             var bestStrategy = new Strategy();
 
             // Get weapon range if available
-            int attackRange = enemy.weapon != null ? enemy.weapon.weaponRange : 5;
+            int attackRange = enemy.EnemyData.EquippedWeapon != null ? enemy.EnemyData.EquippedWeapon.weaponRange : 5;
 
             // Check for players in optimal attack range
             var playersInRange = GetPlayersInRange(currentTile, attackRange);
@@ -45,7 +45,7 @@ namespace Start.Scripts.Enemy.Strategies
             }
 
             // No players in range with line of sight, need to move
-            var allPlayers = _gameManager.Party.PartyControllers;
+            var allPlayers = _gameManager.Party.Party;
             if (allPlayers.Count > 0)
             {
                 // Find the best position to move to
@@ -94,7 +94,7 @@ namespace Start.Scripts.Enemy.Strategies
             distanceFactor = Mathf.Clamp(distanceFactor, 0.5f, 1f);
 
             // Armor class affects hit chance
-            float armorFactor = 20f / (playerInfo.characterData.armorClass + 5f);
+            float armorFactor = 20f / (playerInfo.characterData.ArmorClass + 5f);
             return healthFactor * distanceFactor * armorFactor * 10f;
         }
         /// <summary>
@@ -106,7 +106,7 @@ namespace Start.Scripts.Enemy.Strategies
         /// </summary>
         private OverlayTile FindBestRangedPosition(EnemyController enemy, List<PlayerController> players)
         {
-            var currentTile = enemy.standingOnTile;
+            var currentTile = enemy.StandingOnTile;
 
             // Get tiles at approximately the optimal range from any player
             var candidateTiles = new List<OverlayTile>();
@@ -163,11 +163,11 @@ namespace Start.Scripts.Enemy.Strategies
         private bool IsTileOccupied(OverlayTile tile)
         {
             // Check if any player is on this tile
-            if (_gameManager.Party.PartyControllers.Any(p => p.StandingOnTile == tile))
+            if (_gameManager.Party.Party.Any(p => p.StandingOnTile == tile))
                 return true;
 
             // Check if any enemy is on this tile
-            if (_gameManager.Enemies.enemies.Any(e => e.standingOnTile == tile))
+            if (_gameManager.Enemies.CurrentEnemies.Any(e => e.StandingOnTile == tile))
                 return true;
             return false;
         }

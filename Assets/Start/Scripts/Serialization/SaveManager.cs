@@ -12,10 +12,13 @@ using UnityEngine;
 
 public class SaveManager : MonoBehaviour
 {
-    public CharacterDatabase characterDatabase;
-    public SaveDatabase saveDatabase;
     private List<SaveData> _saves;
     private GameManager _gameManager;
+
+    private GameObject _enemyPrefab;
+    private GameObject _playerPrefab;
+    private GameObject _enemyContainer;
+    private GameObject _playerContainer;
 
     private string GameSavePath => Application.persistentDataPath + "/GameSaves";
 
@@ -25,7 +28,6 @@ public class SaveManager : MonoBehaviour
         set
         {
             _saves = value;
-            SaveRegistry.OnSavesUpdated?.Invoke(_saves);
         }
     }
     private void Awake()
@@ -37,12 +39,14 @@ public class SaveManager : MonoBehaviour
     private void Initialize()
     {
         // Ensure the save directory exists
-        if (!Directory.Exists(Application.persistentDataPath))
+        if (!Directory.Exists(GameSavePath))
         {
-            Directory.CreateDirectory(Application.persistentDataPath);
+            Directory.CreateDirectory(GameSavePath);
         }
-        SaveRegistry.OnSaveRegistered += HandleRegister;
-        SaveRegistry.OnSaveUnregistered += HandleUnregister;
+        _enemyPrefab = _gameManager.EnemyPrefab;
+        _playerPrefab = _gameManager.PlayerPrefab;
+        _enemyContainer = _gameManager.EnemyContainer;
+        _playerContainer = _gameManager.PlayerContainer;
     }
 
     public void SaveGame(string saveName)
@@ -75,25 +79,20 @@ public class SaveManager : MonoBehaviour
         string json = File.ReadAllText(GetSaveFilePath(saveName));
         SaveData saveData = JsonConvert.DeserializeObject<SaveData>(json);
         // load the levelData
-        _gameManager.CurrentLevelData = saveData.CurrentLevel;
+        _gameManager.SetCurrentLevelData(saveData.CurrentLevel);
         if (_gameManager.CurrentLevelData == null)
         {
             Debug.LogError("Unable to load level. Data not found or corrupted.");
             return;
         }
         // load the enemeies
-        List<EnemySaveData> loadedEnemies = new List<EnemySaveData>();
+        List<EnemyData> loadedEnemies = new List<EnemyData>();
         foreach (var enemyData in saveData.Enemies)
         {
-            GameObject enemy = Instantiate(_gameManager.EnemyPrefab, position: enemyData.position, parent: _gameManager.EnemyContainer.transform);
+            GameObject enemy = Instantiate(_gameManager.EnemyPrefab, enemyData.Position, Quaternion.identity, _gameManager.EnemyContainer.transform);
             EnemyController controller = enemy.GetComponent<EnemyController>();
             if (controller != null)
             {
-                enemy.transform.position = new Vector3(
-                    enemyData.position[0],
-                    enemyData.position[1],
-                    enemyData.position[2]
-                );
                 controller.Initialize(enemyData);
                 loadedEnemies.Add(enemyData);
             }
@@ -115,23 +114,12 @@ public class SaveManager : MonoBehaviour
 
         foreach (var savedChar in saveData.Party)
         {
-            CharacterData data = characterDatabase.GetById(savedChar.characterId);
-            if (data == null)
-            {
-                Debug.LogError($"CharacterData not found for ID: {savedChar.characterId}");
-                continue;
-            }
+            GameObject go = Instantiate(_gameManager.PlayerPrefab, savedChar.Position, Quaternion.identity, _gameManager.PlayerContainer.transform);
+            PlayerController player = go.GetComponent<PlayerController>();
 
-            GameObject go = Instantiate(_gameManager.PlayerPrefab, position: savedChar.position, rotation: savedChar.rotation, parent: _gameManager.PlayerContainer.transform);
-            PlayerController controller = go.GetComponent<PlayerController>();
+            player.Initialize(savedChar);
 
-            go.transform.position = new Vector3(
-                savedChar.position[0],
-                savedChar.position[1],
-                savedChar.position[2]
-            );
-
-            loadedParty.Add(controller);
+            loadedParty.Add(player);
         }
         if (loadedParty.Count == 0)
         {
@@ -142,19 +130,7 @@ public class SaveManager : MonoBehaviour
             Debug.Log($"Loaded {loadedParty.Count} characters from save data.");
         }
 
-        _gameManager.LoadGame(loadedParty, loadedEnemies);
-    }
-
-    private void HandleRegister(string saveID)
-    {
-        Debug.Log($"Registered save ID: {saveID}");
-        saveDatabase.RegisterSaveID(saveID);
-    }
-
-    private void HandleUnregister(string saveID)
-    {
-        Debug.Log($"Unregistered save ID: {saveID}");
-        saveDatabase.UnregisterSaveID(saveID);
+        _gameManager.LoadGame(saveData);
     }
 
     private string GetSaveFilePath(string saveID)

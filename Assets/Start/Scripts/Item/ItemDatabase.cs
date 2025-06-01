@@ -1,61 +1,63 @@
-using Start.Scripts.Inventory;
-using System.Collections.Generic;
-using UnityEngine;
+// using Start.Scripts.Inventory;
+// using System.Collections.Generic;
+// using UnityEngine;
+// using System.IO;
 
-namespace Start.Scripts.Item
-{
-    /// <summary>
-    /// Runtime-accessible database for all inventory items (weapons, armor, etc.).
-    /// </summary>
-    public class ItemDatabase : MonoBehaviour
-    {
-        public static ItemDatabase Instance { get; private set; }
 
-        [Header("Item Source")]
-        [SerializeField] private string resourceFolder = "InventoryItems";
-        private Dictionary<string, InventoryItemData> _itemLookup;
+// namespace Start.Scripts.Item
+// {
+//     /// <summary>
+//     /// Runtime-accessible database for all inventory items (weapons, armor, etc.).
+//     /// </summary>
+//     public class ItemDatabase : MonoBehaviour
+//     {
+//         public static ItemDatabase Instance { get; private set; }
 
-        private void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
+//         [Header("Item Source")]
+//         [SerializeField] private string resourceFolder = "InventoryItems";
+//         private Dictionary<string, InventoryItemData> _itemLookup;
 
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            LoadItems();
-        }
+//         private void Awake()
+//         {
+//             if (Instance != null && Instance != this)
+//             {
+//                 Destroy(gameObject);
+//                 return;
+//             }
 
-        private void LoadItems()
-        {
-            _itemLookup = new Dictionary<string, InventoryItemData>();
-            var items = Resources.LoadAll<InventoryItemData>(resourceFolder);
+//             Instance = this;
+//             DontDestroyOnLoad(gameObject);
+//             LoadItems();
+//         }
 
-            foreach (var item in items)
-            {
-                if (item == null || string.IsNullOrEmpty(item.id)) continue;
+//         private void LoadItems()
+//         {
+//             _itemLookup = new Dictionary<string, InventoryItemData>();
+//             var items = Resources.LoadAll<InventoryItemData>(resourceFolder);
 
-                if (_itemLookup.ContainsKey(item.id))
-                {
-                    Debug.LogWarning($"Duplicate item ID detected: {item.id}. Skipping.");
-                    continue;
-                }
+//             foreach (var item in items)
+//             {
+//                 if (item == null || string.IsNullOrEmpty(item.id)) continue;
 
-                _itemLookup[item.id] = item;
-            }
+//                 if (_itemLookup.ContainsKey(item.id))
+//                 {
+//                     Debug.LogWarning($"Duplicate item ID detected: {item.id}. Skipping.");
+//                     continue;
+//                 }
 
-            Debug.Log($"[ItemDatabase] Loaded {_itemLookup.Count} items from '{resourceFolder}'.");
-        }
+//                 _itemLookup[item.id] = item;
+//             }
 
-        public InventoryItemData GetItemById(string id)
-        {
-            return _itemLookup.TryGetValue(id, out var item) ? item : null;
-        }
+//             Debug.Log($"[ItemDatabase] Loaded {_itemLookup.Count} items from '{resourceFolder}'.");
+//         }
 
-        public IEnumerable<InventoryItemData> GetAllItems() => _itemLookup.Values;
-    }
-}
+//         public InventoryItemData GetItemById(string id)
+//         {
+//             return _itemLookup.TryGetValue(id, out var item) ? item : null;
+//         }
+
+//         public IEnumerable<InventoryItemData> GetAllItems() => _itemLookup.Values;
+//     }
+// }
 
 

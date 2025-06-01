@@ -34,6 +34,7 @@ namespace Start.Scripts.Character
         private CombatController _combatController;
         private static Camera _camera;
 
+
         public PlayerController()
         {
             // WARNING: Unity does not guarantee constructor execution like regular C# classes
@@ -72,23 +73,6 @@ namespace Start.Scripts.Character
             {
                 _combatController = gameObject.AddComponent<CombatController>();
             }
-        }
-
-
-        protected override void InitializeActor()
-        {
-            if (characterData == null) return;
-
-            characterData.Stats = new Dictionary<string, int> {
-                { "Str", 0 },
-                { "Dex", 0 },
-                { "Con", 0 },
-                { "Int", 0 },
-                { "Wis", 0 },
-                { "Cha", 0 },
-            };
-            characterData.Modifiers = new List<int> { 0, 0, 0, 0, 0, 0 };
-            characterData.Inventory = inventoryContainer?.GetComponent<InventoryHolder>();
         }
     }
 }

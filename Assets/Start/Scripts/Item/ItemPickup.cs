@@ -13,7 +13,7 @@ namespace Start.Scripts.Item
 
         private void OnTriggerEnter2D(Collider2D col)
         {
-            var inventory = col.transform.GetComponent<PlayerController>().characterData.inventory;
+            var inventory = col.transform.GetComponent<PlayerController>().characterData.Inventory;
 
             if (!inventory) return;
 

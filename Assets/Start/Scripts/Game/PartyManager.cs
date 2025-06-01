@@ -16,8 +16,8 @@ namespace Start.Scripts.Game
     public class PartyManager : MonoBehaviour
     {
         public static PartyManager Instance { get; private set; }
-        private readonly List<CharacterInfoData> _partyInfo = new();
-        private readonly List<GameObject> _partyObjects = new();
+        private List<CharacterInfoData> _partyInfo;
+        private List<GameObject> _partyObjects;
         private List<PlayerController> _party;
         private CharacterInfoData _activePlayer;
         private LevelData _currentLevelData;
@@ -59,35 +59,12 @@ namespace Start.Scripts.Game
 
         public void Initialize()
         {
-            _partyInfo.Clear();
-            _partyObjects.Clear();
+            _partyInfo = new List<CharacterInfoData>();
+            _partyObjects = new List<GameObject>();
             _activePlayer = null;
-            _party.Clear();
+            _party = new List<PlayerController>();
             _currentLevelData = null;
-            ActorRegistry.OnActorRegistered += HandleRegister;
-            ActorRegistry.OnActorUnregistered += HandleUnregister;
             OnPartyUpdated?.Invoke(_partyInfo);
-        }
-
-        private void HandleRegister(Actor actor)
-        {
-            if (actor is PlayerController playerController)
-            {
-                _party.Add(playerController);
-                _partyObjects.Add(playerController.gameObject);
-                _partyInfo.Add(playerController.characterData);
-                OnPartyUpdated?.Invoke(_partyInfo);
-            }
-        }
-        private void HandleUnregister(Actor actor)
-        {
-            if (actor is PlayerController playerController)
-            {
-                _party.Remove(playerController);
-                _partyObjects.Remove(playerController.gameObject);
-                _partyInfo.Remove(playerController.characterData);
-                OnPartyUpdated?.Invoke(_partyInfo);
-            }
         }
 
         public void UpdatePartyData()
@@ -185,26 +162,20 @@ namespace Start.Scripts.Game
             return _partyInfo;
         }
 
-        public void AddToParty(GameObject character)
+        public void AddToParty(CharacterInfoData character)
         {
-            var c = character.GetComponent<PlayerController>();
-            if (!_partyInfo.Contains(c.characterData))
+            if (!_partyInfo.Contains(character))
             {
-                _partyInfo.Add(c.characterData);
-                _partyObjects.Add(character);
-                _party.Add(c);
+                _partyInfo.Add(character);
                 OnPartyUpdated?.Invoke(_partyInfo);
             }
         }
 
-        public void RemoveFromParty(GameObject character)
+        public void RemoveFromParty(CharacterInfoData character)
         {
-            var c = character.GetComponent<PlayerController>();
-            if (_partyInfo.Contains(c.characterData))
+            if (_partyInfo.Contains(character))
             {
-                _partyInfo.Remove(c.characterData);
-                _partyObjects.Remove(character);
-                _party.Remove(c);
+                _partyInfo.Remove(character);
                 if (_activePlayer == character && _partyInfo.Count > 0)
                     _activePlayer = _partyInfo[0];
 
@@ -216,6 +187,13 @@ namespace Start.Scripts.Game
         {
             if (_partyInfo.Contains(character))
                 _activePlayer = character;
+            OnPartyUpdated?.Invoke(_partyInfo);
+        }
+
+        public void UpdateParty(List<CharacterInfoData> partyData)
+        {
+            _partyInfo = partyData;
+            OnPartyUpdated?.Invoke(_partyInfo);
         }
 
         public void ClearParty()

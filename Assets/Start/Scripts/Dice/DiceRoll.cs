@@ -13,38 +13,29 @@ namespace Start.Scripts.Dice
         public int RollToHit(PlayerController player)
         {
             var info = player.characterData;
-            var hitBonus = info.bonusToHit;
-            var rolls = new List<int>();
-            if (!info.hasAdvantage)
+            if (!info.HasAdvantage)
             {
-                var roll = RollDice("D20", 1);
-                return roll.Keys.First();
+                return RollDice("D20", 1).Keys.First();
             }
-            if (info.hasDisadvantage)
+            if (info.HasDisadvantage)
             {
-                rolls = RollDice("D20", 2).Values.First();
-                return rolls.Min();
+                return RollDice("D20", 2).Values.First().Min();
             }
-            rolls = RollDice("D20", 2).Values.First();
-            return rolls.Max();
+            return RollDice("D20", 2).Values.First().Max();
 
         }
-        public int RollToHit(EnemyController info)
+        public int RollToHit(EnemyController enemy)
         {
-            var hitBonus = info.bonusToHit;
-            var rolls = new List<int>();
-            if (!info.hasAdvantage)
+            var info = enemy.EnemyData;
+            if (!info.HasAdvantage)
             {
-                var roll = RollDice("D20", 1);
-                return roll.Keys.First();
+                return RollDice("D20", 1).Keys.First();
             }
-            if (info.hasDisadvantage)
+            if (info.HasDisadvantage)
             {
-                rolls = RollDice("D20", 2).Values.First();
-                return rolls.Min();
+                return RollDice("D20", 2).Values.First().Min();
             }
-            rolls = RollDice("D20", 2).Values.First();
-            return rolls.Max();
+            return RollDice("D20", 2).Values.First().Max();
         }
         public int RollStat()
         {
@@ -66,15 +57,11 @@ namespace Start.Scripts.Dice
 
         public int RollDmg(PlayerController other)
         {
-            var dmgRoll = RollDice(other.characterData.equippedWeapon.dmgDice, other.characterData.equippedWeapon.dmgDiceNum);
-            var dmg = dmgRoll.Keys.First();
-            return dmg;
+            return RollDice(other.characterData.EquippedWeapon.dmgDice, other.characterData.EquippedWeapon.dmgDiceNum).Keys.First();
         }
         public int RollDmg(EnemyController other)
         {
-            var dmgRoll = RollDice(other.weapon.dmgDice, other.weapon.dmgDiceNum);
-            var dmg = dmgRoll.Keys.First();
-            return dmg;
+            return RollDice(other.EnemyData.EquippedWeapon.dmgDice, other.EnemyData.EquippedWeapon.dmgDiceNum).Keys.First();
         }
 
         public Dictionary<int, List<int>> RollDice(string dice, int numberOfDice)

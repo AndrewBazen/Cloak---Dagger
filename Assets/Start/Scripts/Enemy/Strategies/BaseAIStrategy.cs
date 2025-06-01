@@ -24,7 +24,7 @@ namespace Start.Scripts.Enemy.Strategies
         protected List<PlayerController> GetPlayersInRange(OverlayTile centerTile, int range)
         {
             var tilesInRange = _gameManager.RangeFinder.GetRangeTiles(centerTile.Grid2DLocation, range);
-            return _gameManager.Party.PartyControllers.Where(player =>
+            return _gameManager.Party.Party.Where(player =>
                 tilesInRange.Contains(player.StandingOnTile)).ToList();
         }
         /// <summary>
@@ -46,7 +46,7 @@ namespace Start.Scripts.Enemy.Strategies
         /// </summary>
         protected PlayerController GetClosestPlayer(OverlayTile startTile)
         {
-            return _gameManager.Party.PartyControllers
+            return _gameManager.Party.Party
                 .OrderBy(p => GetDistance(startTile, p.StandingOnTile))
                 .FirstOrDefault();
         }

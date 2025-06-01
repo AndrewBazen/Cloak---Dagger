@@ -20,6 +20,7 @@ namespace Start.Scripts.UI
 
         private void Start()
         {
+            player = new CharacterInfoData();
             dropdown = gameObject.GetComponent<TMP_Dropdown>();
             _classDelegate += UpdatePlayerPic;
             _classDelegate += UpdatePlayerInfo;
@@ -49,7 +50,7 @@ namespace Start.Scripts.UI
         {
             if (dropdown.value == 0)
             {
-                player.playerClass = null;
+                player.PlayerClass = null;
                 return;
             }
             foreach (var option in dropdown.options)
@@ -67,7 +68,7 @@ namespace Start.Scripts.UI
                         continue;
                     }
 
-                    player.playerClass = c;
+                    player.PlayerClass = c;
                     return;
                 }
             }

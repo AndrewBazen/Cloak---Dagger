@@ -11,7 +11,6 @@ namespace Start.Scripts.Character
             {
                 GameEvents current = GameEvents.current;
                 current.OnLoadEvent += DestroyMe;
-                current.OnEnemiesChanged += (enemies) => _enemies = enemies;
             }
             else
             {
@@ -27,7 +26,7 @@ namespace Start.Scripts.Character
 
             if (_gameManager != null && characterData != null)
             {
-                _gameManager.Party.RemoveFromParty(this.gameObject);
+                _gameManager.Party.RemoveFromParty(gameObject);
             }
 
             Destroy(gameObject);

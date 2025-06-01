@@ -93,7 +93,7 @@ namespace Start.Scripts.Combat
             {
                 // Use GameManager for attack resolution
                 var hitRoll = _diceRoll.RollToHit(player);
-                if (hitRoll < other.ArmorClass)
+                if (hitRoll < other.EnemyData.BaseArmorClass)
                 {
                     _gameManager.Combat.DamageActor(other, 0); // No damage on miss
                     return;
@@ -105,7 +105,7 @@ namespace Start.Scripts.Combat
             {
                 // Fallback to legacy behavior
                 var hitRoll = _diceRoll.RollToHit(player);
-                if (hitRoll < other.ArmorClass)
+                if (hitRoll < other.EnemyData.BaseArmorClass)
                 {
                     _gameManager.Combat.DamageActor(other, 0); // No damage on miss
                     return;

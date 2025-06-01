@@ -67,6 +67,14 @@ namespace Start.Scripts.Game
             return controller;
         }
 
+        public void SpawnEnemies(List<EnemyData> enemies)
+        {
+            foreach (var enemy in enemies)
+            {
+                SpawnEnemy(enemy.Position);
+            }
+        }
+
         private void ApplyDifficulty(EnemyController enemy)
         {
             enemy.SetDifficulty(difficultyMultiplier);

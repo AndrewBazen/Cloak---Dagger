@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using TileData = Start.Scripts.AI.Jobs.TileData;
@@ -20,6 +21,9 @@ namespace Start.Scripts.Map
         public List<OverlayTile> playerSpawnTiles;
         public List<OverlayTile> enemySpawnTiles;
         public Dictionary<Vector2Int, OverlayTile> Map { get; private set; }
+
+        private List<Vector2Int> _playerSpawnTiles = new();
+        private List<Vector2Int> _enemySpawnTiles = new();
         private void Awake()
         {
             // Singleton pattern
@@ -30,6 +34,7 @@ namespace Start.Scripts.Map
             }
             Instance = this;
             Map = new Dictionary<Vector2Int, OverlayTile>();
+
         }
 
         private void Start()
@@ -37,8 +42,8 @@ namespace Start.Scripts.Map
             var originPosition = groundTileMap.CellToWorld(new Vector3Int(0, 0, 0));
             var gridWidth = groundTileMap.cellBounds.size.x;
             var gridHeight = groundTileMap.cellBounds.size.y;
-            playerSpawnTiles = level.PlayerSpawnTiles;
-            enemySpawnTiles = level.EnemySpawnTiles;
+            playerSpawnTiles = Map.Values.Where(tile => tile.Grid2DLocation.x == gridWidth && tile.Grid2DLocation.y % 2 == 0).ToList();
+            enemySpawnTiles = Map.Values.Where(tile => tile.Grid2DLocation.x == gridWidth && tile.Grid2DLocation.y % 2 == 1).ToList();
 
             // TODO: implement a way to load tilemaps dynamically based on level data
             // TODO: implement populating the overlay grid based on the tilemaps

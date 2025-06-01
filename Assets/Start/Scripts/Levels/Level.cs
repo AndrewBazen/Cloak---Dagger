@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Start.Scripts.Levels
 {
-    public class Level : MonoBehaviour, ILevel
+    public class Level : MonoBehaviour
     {
         public LevelData LevelData
         {

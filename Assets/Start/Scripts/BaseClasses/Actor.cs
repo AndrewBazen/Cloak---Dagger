@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace Start.Scripts.BaseClasses
 {
-    public abstract class Actor : MonoBehaviour, ITrackable, INotifyPropertyChanged, IManagable
+    public abstract class Actor : MonoBehaviour, ITrackable, INotifyPropertyChanged
     {
 
         private bool _hasTurn;
@@ -122,10 +122,6 @@ namespace Start.Scripts.BaseClasses
                 OnPropertyChanged(nameof(HasMovement));
             }
         }
-        public int ArmorClass
-        {
-            get => _data.baseArmorClass + _data.armor.armorClassBonus + _data.statBonuses["Constitution"];
-        }
 
         public Dictionary<string, int> StatBonuses
         {
@@ -152,7 +148,6 @@ namespace Start.Scripts.BaseClasses
         protected virtual void Start()
         {
             InitializeActor();
-            _gameManager.State.OnGameStateChanged += OnGameStateChanged;
             _gameManager.Combat.OnCombatStarted += OnCombatStarted;
             _gameManager.Combat.OnCombatEnded += OnCombatEnded;
             OnInitialized?.Invoke();
@@ -214,35 +209,9 @@ namespace Start.Scripts.BaseClasses
             Initiative = rand.Next(1, 20);
         }
 
-        protected virtual void LoadData()
-        {
-            CurrentHealth = _data.health;
-            CurrentMana = _data.mana;
-            HasTurn = _data.hasTurn;
-            HasAction = _data.hasAction;
-            HasMovement = _data.hasMovement;
-            HasBonusAction = _data.hasBonusAction;
-            HasReaction = _data.hasReaction;
-            Initiative = _data.initiative; // Default initiative, can be set later
-            StandingOnTile = _data.tilePos; // Default tile, can be set later
-            StatBonuses = _data.statBonuses;
-            Stats = _data.stats;
-        }
-
-
-        public int GetStatBonus(string statName)
-        {
-            return _data.statBonuses.ContainsKey(statName) ? _data.statBonuses[statName] : 0;
-        }
-
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected virtual void OnGameStateChanged(GameManager.GameState newState)
-        {
-            //update game state logic here if needed
         }
 
     }

@@ -12,7 +12,7 @@ namespace Start.Scripts.Enemy.Strategies
     {
         public override Strategy EvaluateStrategy(EnemyController enemy)
         {
-            var currentTile = enemy.standingOnTile;
+            var currentTile = enemy.StandingOnTile;
             var bestStrategy = new Strategy();
 
             // Look for players in melee range first
@@ -62,7 +62,7 @@ namespace Start.Scripts.Enemy.Strategies
             // Simple heuristic: prioritize lower health and lower armor class
             return playersInRange
                 .OrderBy(p => p.CurrentHealth)
-                .ThenBy(p => p.characterData.armorClass)
+                .ThenBy(p => p.characterData.ArmorClass)
                 .FirstOrDefault();
         }
 
@@ -104,7 +104,7 @@ namespace Start.Scripts.Enemy.Strategies
             float healthFactor = 100f / (playerInfo.CurrentHealth + 10f); // +10 to avoid division by zero
 
             // Armor class affects hit chance
-            float armorFactor = 20f / (playerInfo.characterData.armorClass + 5f);
+            float armorFactor = 20f / (playerInfo.characterData.ArmorClass + 5f);
 
             // Prioritize targets that are easier to hit and lower health
             return healthFactor * armorFactor * 10f;
@@ -124,7 +124,7 @@ namespace Start.Scripts.Enemy.Strategies
 
             // Find the closest available tile to the enemy
             return availableTiles
-                .OrderBy(t => GetDistance(enemy.standingOnTile, t))
+                .OrderBy(t => GetDistance(enemy.StandingOnTile, t))
                 .FirstOrDefault();
         }
         /// <summary>
@@ -133,11 +133,11 @@ namespace Start.Scripts.Enemy.Strategies
         private bool IsTileOccupied(OverlayTile tile)
         {
             // Check if any player is on this tile
-            if (_gameManager.Party.PartyControllers.Any(p => p.StandingOnTile == tile))
+            if (_gameManager.Party.Party.Any(p => p.StandingOnTile == tile))
                 return true;
 
             // Check if any enemy is on this tile
-            if (_gameManager.Enemies.enemies.Any(e => e.standingOnTile == tile))
+            if (_gameManager.Enemies.CurrentEnemies.Any(e => e.StandingOnTile == tile))
                 return true;
             return false;
         }
