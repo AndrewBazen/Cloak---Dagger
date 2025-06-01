@@ -49,18 +49,12 @@ public class SaveManager : MonoBehaviour
     {
         SaveData saveData = new SaveData();
 
+        // ensure party data is up to date
+        _gameManager.Party.UpdatePartyData();
         foreach (var player in _gameManager.Party.Party)
-        {
-            saveData.Party.Add(new CharacterSaveData
-            {
-                characterId = player.characterData.Id,
-                currentHealth = player.CurrentHealth,
-                position = new float[] {
-                    player.transform.position.x,
-                    player.transform.position.y,
-                    player.transform.position.z
-                }
-            });
+        {   
+
+            saveData.Party.Add(player.characterData);
         }
 
         string json = JsonConvert.SerializeObject(saveData, Formatting.Indented);

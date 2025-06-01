@@ -3,6 +3,9 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Start.Scripts.Game;
+using Start.Scripts.Character;
+using System.Collections.Generic;
+
 
 namespace Start.Scripts.UI
 {
@@ -14,11 +17,15 @@ namespace Start.Scripts.UI
     {
         public static UIManager Instance { get; private set; }
 
+        private GameManager _gameManager;
+
         [Header("UI Panels")]
         [SerializeField] private GameObject mainMenuPanel;
         [SerializeField] private GameObject hudPanel;
         [SerializeField] private GameObject pauseMenuPanel;
+
         [SerializeField] private GameObject gameOverPanel;
+        [SerializeField] private GameObject gamePlayPanel;
 
         private void Awake()
         {
@@ -30,15 +37,48 @@ namespace Start.Scripts.UI
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            _gameManager = GameManager.Instance;
         }
 
         private void Start()
         {
-            if (GameManager.Instance.SceneEvents != null)
+            Initialize();
+            if (_gameManager.SceneEvents != null)
             {
-                GameManager.Instance.SceneEvents.OnSceneLoaded += HandleSceneLoaded;
-                GameManager.Instance.SceneEvents.OnActiveSceneChanged += HandleActiveSceneChanged;
+                _gameManager.SceneEvents.OnSceneLoaded += HandleSceneLoaded;
+                _gameManager.SceneEvents.OnActiveSceneChanged += HandleActiveSceneChanged;
             }
+        }
+
+        private void Initialize()
+        {
+            _gameManager.OnGameStateChanged += UpdateUI;
+            _gameManager.Party.OnPartyUpdated += UpdatePartyUI;
+            _gameManager.Combat.OnCombatStarted += UpdateCombatUI;
+            _gameManager.Combat.OnCombatEnded += UpdateUI;
+            UpdateUIForScene("MainMenu");
+        }
+
+        private void UpdateUI()
+        {
+            if (_gameManager.CurrentGameState == GameManager.GameState.Exploration)
+            {
+                UpdatePartyUI(_gameManager.Party.PartyMembers);
+            }
+            else if (_gameManager.CurrentGameState == GameManager.GameState.Combat)
+            {
+                UpdateCombatUI();
+            }
+        }
+
+        private void UpdatePartyUI(List<CharacterInfoData> party)
+        {
+            // TODO: Update party portrait panel, turn order UI, etc.
+        }
+
+        private void UpdateCombatUI()
+        {
+            // TODO: Update combat UI
         }
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -91,6 +131,7 @@ namespace Start.Scripts.UI
             hudPanel?.SetActive(sceneName.StartsWith("Level_"));
             pauseMenuPanel?.SetActive(false);
             gameOverPanel?.SetActive(sceneName == "GameOver");
+            gamePlayPanel?.SetActive(sceneName == "GamePlay");
         }
 
         public void TogglePauseMenu(bool show)
@@ -100,10 +141,10 @@ namespace Start.Scripts.UI
 
         private void OnDestroy()
         {
-            if (SceneEventManager.Instance != null)
+            if (_gameManager.SceneEvents != null)
             {
-                SceneEventManager.Instance.OnSceneLoaded -= HandleSceneLoaded;
-                SceneEventManager.Instance.OnActiveSceneChanged -= HandleActiveSceneChanged;
+                _gameManager.SceneEvents.OnSceneLoaded -= HandleSceneLoaded;
+                _gameManager.SceneEvents.OnActiveSceneChanged -= HandleActiveSceneChanged;
             }
         }
     }

@@ -93,9 +93,9 @@ namespace Start.Scripts.Enemy
 
         public void SetDifficulty(float difficultyMultiplier)
         {
-            _enemyData.maxHealth = Mathf.RoundToInt(_enemyData.maxHealth * difficultyMultiplier);
-            _enemyData.health = _enemyData.maxHealth;
-            _enemyData.bonusToHit = Mathf.RoundToInt(_enemyData.bonusToHit * difficultyMultiplier);
+            _enemyData.Health = Mathf.RoundToInt(_enemyData.Health * difficultyMultiplier);
+            _enemyData.MaxHealth = Mathf.RoundToInt(_enemyData.MaxHealth * difficultyMultiplier);
+            _enemyData.BonusToHit = Mathf.RoundToInt(_enemyData.BonusToHit * difficultyMultiplier);
             CalculateStatBonuses();
         }
 
@@ -144,7 +144,7 @@ namespace Start.Scripts.Enemy
         private List<GameObject> GetPlayersInRangedRange(OverlayTile tile)
         {
             var playersInRange = new List<GameObject>();
-            var inRangeTiles = _gameManager.RangeFinder.GetRangeTiles(tile.Grid2DLocation, _enemyData.weapon.weaponRange);
+            var inRangeTiles = _gameManager.RangeFinder.GetRangeTiles(tile.Grid2DLocation, _enemyData.EquippedWeapon.weaponRange);
             foreach (var t in inRangeTiles)
             {
                 if (!CheckIfTileIsPlayerTile(t))
@@ -251,7 +251,7 @@ namespace Start.Scripts.Enemy
             {
                 playersAlongPath.Add(p);
             }
-            return _enemyData.speed - playersAlongPath.Count;
+            return _enemyData.Speed - playersAlongPath.Count;
         }
         private float CalculateRangedMovementValue(List<OverlayTile> tempMovePath)
         {
@@ -260,95 +260,100 @@ namespace Start.Scripts.Enemy
             {
                 newTile = tempMovePath.Last();
             }
-            var tilesInRange = _gameManager.RangeFinder.GetRangeTiles(newTile.Grid2DLocation, _enemyData.movement);
-            var playersInRange = GetPlayersInRange(_standingOnTile, _enemyData.movement);
+            var tilesInRange = _gameManager.RangeFinder.GetRangeTiles(newTile.Grid2DLocation, _enemyData.Movement);
+            var playersInRange = GetPlayersInRange(_standingOnTile, _enemyData.Movement);
             var value = 0f;
             switch (playersInRange.Count)
             {
                 case 0:
                     {
-                        value = _enemyData.speed;
+                        value = _enemyData.Speed;
                         break;
                     }
                 case 1:
                     {
                         var playerPaths = GetPlayerPaths(playersInRange);
-                        value = _enemyData.speed + playerPaths[0].Count;
+                        value = _enemyData.Speed + playerPaths[0].Count;
                         break;
                     }
                 case > 1:
                     {
                         var playerPaths = GetPlayerPaths(playersInRange);
                         var combinedPathValue = playerPaths.Sum(path => path.Count);
-                        value = _enemyData.speed + combinedPathValue;
+                        value = _enemyData.Speed + combinedPathValue;
                         break;
                     }
             }
             return value;
         }
+
         protected List<GameObject> GetPlayersInRange(OverlayTile centerTile, int range)
         {
             var tilesInRange = _gameManager.RangeFinder.GetRangeTiles(centerTile.Grid2DLocation, range);
             return _gameManager.Party.PartyObjects.Where(player =>
                 tilesInRange.Contains(player.GetComponent<PlayerController>().StandingOnTile)).ToList();
         }
+
         private float CalculateMeleeAttackValue(PlayerController playerInfo)
         {
-            var hitValue = 0f;
-            var dmgDifference = 0f;
+            float hitValue;
+            float dmgDifference;
             var playerHealth = playerInfo.CurrentHealth;
-            if ((_enemyData.weapon.averageDmg + _enemyData.statBonuses[_enemyData.weapon.weaponStat])! >
+            if ((_enemyData.EquippedWeapon.averageDmg + _enemyData.Modifiers[_enemyData.EquippedWeapon.weaponStat]) >
                 playerHealth)
             {
-                hitValue = _enemyData.weapon.averageDmg +
-                            _enemyData.statBonuses[_enemyData.weapon.weaponStat];
+                hitValue = _enemyData.EquippedWeapon.averageDmg +
+                            _enemyData.Modifiers[_enemyData.EquippedWeapon.weaponStat];
                 dmgDifference = playerHealth - hitValue;
                 return hitValue + dmgDifference;
             }
-            hitValue = _enemyData.weapon.averageDmg +
-                       _enemyData.statBonuses[_enemyData.weapon.weaponStat];
+            hitValue = _enemyData.EquippedWeapon.averageDmg +
+                       _enemyData.Modifiers[_enemyData.EquippedWeapon.weaponStat];
             dmgDifference = hitValue - playerHealth;
             return hitValue + dmgDifference + 100f;
         }
+
         private float CalculateRangedAttackValue(PlayerController playerInfo, int distanceToPlayer)
         {
-            if (distanceToPlayer < 2 && _enemyData.weapon.averageDmg - playerInfo.CurrentHealth > 0)
+            if (distanceToPlayer < 2 && _enemyData.EquippedWeapon.averageDmg - playerInfo.CurrentHealth > 0)
             {
                 return -10000;
             }
             var attackValue = distanceToPlayer;
             return attackValue;
         }
+
         private List<GameObject> GetPlayersInMeleeRange(OverlayTile tile)
         {
-            return GetPlayersInRange(tile, _enemyData.weapon.weaponRange);
+            return GetPlayersInRange(tile, _enemyData.EquippedWeapon.weaponRange);
         }
+
         private float CalculateAbilityAttackValue(PlayerController playerInfo, Ability ability,
             List<GameObject> playersInAbilityRange, List<GameObject> alliesAffected)
         {
             float hitValue;
             var playersAffected = playersInAbilityRange.Count;
-            if ((ability.averageDmg + _enemyData.statBonuses[ability.stat])! > playerInfo.CurrentHealth && alliesAffected.Count == 0)
+            if ((ability.averageDmg + _enemyData.Modifiers[ability.stat])! > playerInfo.CurrentHealth && alliesAffected.Count == 0)
             {
-                hitValue = (ability.averageDmg + _enemyData.statBonuses[ability.stat]) - playerInfo.CurrentHealth;
+                hitValue = (ability.averageDmg + _enemyData.Modifiers[ability.stat]) - playerInfo.CurrentHealth;
                 var dmgDifference = Math.Abs(hitValue - playerInfo.CurrentHealth);
                 return hitValue + playersAffected + dmgDifference;
             }
-            if ((ability.averageDmg + _enemyData.statBonuses[ability.stat])! > playerInfo.CurrentHealth && alliesAffected.Count > 0)
+            if ((ability.averageDmg + _enemyData.Modifiers[ability.stat])! > playerInfo.CurrentHealth && alliesAffected.Count > 0)
             {
-                hitValue = (ability.averageDmg + _enemyData.statBonuses[ability.stat]) - playerInfo.CurrentHealth;
+                hitValue = (ability.averageDmg + _enemyData.Modifiers[ability.stat]) - playerInfo.CurrentHealth;
                 var dmgDifference = Math.Abs(hitValue - playerInfo.CurrentHealth);
                 return (hitValue + playersAffected + dmgDifference) * .25f;
             }
-            if ((ability.averageDmg + _enemyData.statBonuses[ability.stat]) > playerInfo.CurrentHealth && alliesAffected.Count == 0)
+            if ((ability.averageDmg + _enemyData.Modifiers[ability.stat]) > playerInfo.CurrentHealth && alliesAffected.Count == 0)
             {
-                hitValue = (ability.averageDmg + _enemyData.statBonuses[ability.stat]) - playerInfo.CurrentHealth;
+                hitValue = (ability.averageDmg + _enemyData.Modifiers[ability.stat]) - playerInfo.CurrentHealth;
                 var dmgDifference = Math.Abs(hitValue - playerInfo.CurrentHealth);
                 return hitValue + playersAffected + dmgDifference + 100f;
             }
-            if ((ability.averageDmg + _enemyData.statBonuses[ability.stat]) > playerInfo.CurrentHealth && alliesAffected.Count > 0)
+            if ((ability.averageDmg + _enemyData.Modifiers[ability.stat]) > playerInfo.CurrentHealth && alliesAffected.Count > 0)
             {
-                hitValue = (ability.averageDmg + _enemyData.statBonuses[ability.stat]) - playerInfo.CurrentHealth;
+                hitValue = (ability.averageDmg + _enemyData.Modifiers[ability.stat]) - playerInfo.CurrentHealth;
                 var dmgDifference = Math.Abs(hitValue - playerInfo.CurrentHealth);
                 return (hitValue + playersAffected + dmgDifference + 100f) * .25f;
             }
@@ -359,7 +364,7 @@ namespace Start.Scripts.Enemy
         {
             if (playerToAttack)
             {
-                switch (_enemyData.attackType)
+                switch (_enemyData.AttackType)
                 {
                     case "Melee":
                         {
@@ -420,12 +425,6 @@ namespace Start.Scripts.Enemy
             }
         }
 
-        private void EndTurn()
-        {
-            _strategyFound = false;
-            _combatController.StopTurn();
-        }
-
         /** MoveAlongPath()
          * description: gets the enemies speed of movement and then moves the player
          * @return void
@@ -433,7 +432,7 @@ namespace Start.Scripts.Enemy
         private void MoveAlongPath()
         {
             // slows movement for the visual
-            var step = _enemyData.speed * Time.deltaTime;
+            var step = _enemyData.Speed * Time.deltaTime;
 
             var zIndex = _path[0].transform.position.z;
 
@@ -518,72 +517,72 @@ namespace Start.Scripts.Enemy
 
         private void CalculateStatBonuses()
         {
-            for (var i = 0; i < _enemyData.stats.Count; i++)
+            for (var i = 0; i < _enemyData.Stats.Count; i++)
             {
-                var stat = _enemyData.stats[i];
+                var stat = _enemyData.Stats[i];
                 if (stat == 1)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], -5);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], -5);
                 }
                 if (stat is >= 2 and <= 3)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], -4);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], -4);
                 }
                 if (stat is >= 4 and <= 5)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], -3);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], -3);
                 }
                 if (stat is >= 6 and <= 7)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], -2);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], -2);
                 }
                 if (stat is >= 8 and <= 9)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], -1);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], -1);
                 }
                 if (stat is >= 10 and <= 11)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 0);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 0);
                 }
                 if (stat is >= 12 and <= 13)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 1);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 1);
                 }
                 if (stat is >= 14 and <= 15)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 2);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 2);
                 }
                 if (stat is >= 16 and <= 17)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 3);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 3);
                 }
                 if (stat is >= 18 and <= 19)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 4);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 4);
                 }
                 if (stat is >= 20 and <= 21)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 5);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 5);
                 }
                 if (stat is >= 22 and <= 23)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 6);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 6);
                 }
                 if (stat is >= 24 and <= 25)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 7);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 7);
                 }
                 if (stat is >= 26 and <= 27)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 8);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 8);
                 }
                 if (stat is >= 28 and <= 29)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 9);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 9);
                 }
                 if (stat == 30)
                 {
-                    _enemyData.statBonuses.Add(_enemyData.statType[i], 10);
+                    _enemyData.Modifiers.Add(_enemyData.StatType[i], 10);
                 }
 
             }
@@ -593,12 +592,13 @@ namespace Start.Scripts.Enemy
         {
             _enemyData = enemyData;
             // Set up AI strategy based on enemy type
-            _aiStrategy = AIStrategyFactory.GetStrategy(_enemyData.attackType);
+            _aiStrategy = AIStrategyFactory.GetStrategy(_enemyData.AttackType);
 
             // Initialize from data if available
             if (_enemyData != null)
             {
                 LoadEnemyValues();
+                CalculateStatBonuses();
             }
             OnEnemyLoaded?.Invoke();
         }

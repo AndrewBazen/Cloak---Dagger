@@ -23,11 +23,15 @@ namespace Start.Scripts.Game
         public JobSystemPathFinder PathFinder => JobSystemPathFinder.Instance;
         public JobSystemRangeFinder RangeFinder => JobSystemRangeFinder.Instance;
         public GameObject DamageTextPrefab => _dmgPrefab;
-
+        public GameObject Cursor => _cursor;
         public enum GameState { MainMenu, Initialization, Exploration, Combat, Paused, GameOver }
         private GameState _currentGameState;
 
-        public GameState Current => _currentGameState;
+        private GameState _previousGameState;
+
+        public GameState CurrentGameState => _currentGameState;
+        private SaveManager _saveManager;
+        public SaveManager SaveManager => _saveManager;
         public event System.Action OnMapGenerated;
         public event System.Action OnGameStateChanged;
 
@@ -42,6 +46,10 @@ namespace Start.Scripts.Game
         [SerializeField] private InputManager _inputManager;
         [SerializeField] private UIManager _uiManager;
         [SerializeField] private SceneEventManager _sceneEventManager;
+        [SerializeField] private GameObject _cursor;
+
+
+
 
         private void Awake()
         {
@@ -59,8 +67,12 @@ namespace Start.Scripts.Game
         {
             _sceneEventManager.OnSceneLoaded += HandleSceneLoaded;
             _inputManager.OnPausePressed += TogglePause;
+            //_combatManager.OnPlayerDefeated += HandlePlayerDefeated;
+            //_combatManager.OnEnemyDefeated += HandleEnemyDefeated;
+
 
             _currentGameState = GameState.MainMenu;
+            _previousGameState = GameState.MainMenu;
             _uiManager.ShowMainMenu();
         }
 
@@ -75,7 +87,19 @@ namespace Start.Scripts.Game
             _inputManager = InputManager.Instance;
 
             // Subscribe to game state changes
-            OnGameStateChanged += (state) => Debug.Log($"Game state changed to: {state}");
+            OnGameStateChanged += () => Debug.Log($"Game state changed to: {_currentGameState}");
+        }
+
+        public void Initialize()
+        {
+            _currentGameState = GameState.MainMenu;
+            _uiManager.ShowMainMenu();
+        }
+
+        public void LoadGame(string saveName)
+        {
+            _currentGameState = GameState.Exploration;
+            _uiManager.ShowGameplayUI();
         }
 
         public void StartNewGame()
@@ -104,22 +128,34 @@ namespace Start.Scripts.Game
 
         public void TogglePause()
         {
-            if (_currentGameState == GameState.Paused)
+            if (_currentGameState == GameState.Paused && _previousGameState == GameState.Exploration)
             {
                 _currentGameState = GameState.Exploration;
                 Time.timeScale = 1.0f;
                 _uiManager.HidePauseMenu();
             }
-            else
+            else if (_currentGameState == GameState.Paused && _previousGameState == GameState.Combat)
             {
+                _currentGameState = GameState.Combat;
+                Time.timeScale = 1.0f;
+                _uiManager.HidePauseMenu();
+            }
+            else if (_currentGameState != GameState.Paused)
+            {
+                _previousGameState = _currentGameState;
                 _currentGameState = GameState.Paused;
                 Time.timeScale = 0.0f;
                 _uiManager.ShowPauseMenu();
+            }
+            else
+            {
+                return;
             }
         }
 
         public void EndGame()
         {
+            _previousGameState = _currentGameState;
             _currentGameState = GameState.GameOver;
             _uiManager.ShowGameOver();
             SceneManager.LoadScene("GameOver");
@@ -127,33 +163,51 @@ namespace Start.Scripts.Game
 
         private void LoadLevel(int level)
         {
+            _previousGameState = _currentGameState;
+            _currentGameState = GameState.Exploration;
             string sceneName = $"Level_{level}";
             SceneManager.LoadScene(sceneName);
         }
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            var map = MapManager.Instance;
-            if (map == null || map.playerSpawnTiles == null) return;
-
-            // Example character data
-            var partyData = new List<CharacterLoadData>
+            if (scene.name.Contains("Level_"))
             {
-                new CharacterLoadData { characterName = "Aelric", playerClass = new PlayerClass { name = "Warrior" } },
-                new CharacterLoadData { characterName = "Thorne", playerClass = new PlayerClass { name = "Rogue" } },
-            };
+                if (MapMan == null || MapMan.Map == null || MapMan.playerSpawnTiles == null)
+                {
+                    Debug.LogError("Map not found in scene");
+                return;
+                }
 
-            var spawnedParty = _partyManager.SpawnPlayers(
-                partyData,
-                map.playerSpawnTiles,
-                _playerPrefab,
-                _playerContainer.transform
-            );
+                // Example character data
+                var partyData = new List<CharacterInfoData>
+                {
+                    new CharacterInfoData { Id = 1, PlayerClass = new PlayerClass { className = "Warrior" } },
+                    new CharacterInfoData { Id = 2, PlayerClass = new PlayerClass { className = "Rogue" } },
+                };
+
+                var spawnedParty = _partyManager.SpawnPlayers(
+                    partyData,
+                    MapMan.playerSpawnTiles
+                );
 
 
-            OnMapGenerated?.Invoke();
-            _enemyManager.SpawnEnemiesForLevel(1);
-            _uiManager.ShowGameplayUI();
+                OnMapGenerated?.Invoke();
+                _enemyManager.SpawnEnemiesForLevel(1);
+                _uiManager.ShowGameplayUI();
+            }
+        }
+
+        public void Confirm()
+        {
+            // Future: Send confirm event to currently focused UI or system
+            Debug.Log("Confirm Input Received");
+        }
+
+        public void Cancel()
+        {
+            // Future: Close menus, cancel actions
+            Debug.Log("Cancel Input Received");
         }
 
     }

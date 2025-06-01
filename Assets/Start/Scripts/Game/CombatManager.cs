@@ -18,9 +18,12 @@ namespace Start.Scripts.Game
         public event Action OnCombatEnded;
         public event Action OnCharacterDamaged;
         public event Action OnEnemyDamaged;
+        public event Action OnPlayerDefeated;
+        public event Action OnEnemyDefeated;
 
-        private List<Actor> _party;
-        private List<Actor> _enemies;
+
+        private List<PlayerController> _party;
+        private List<EnemyController> _enemies;
         private Queue<Actor> _turnQueue;
         private MonoBehaviour _currentTurnActor;
         private GameManager _gameManager;
@@ -47,8 +50,8 @@ namespace Start.Scripts.Game
 
         public void Initialize()
         {
-            _party = _gameManager.Party.Actors;
-            _enemies = _gameManager.Enemies.Actors;
+            _party = _gameManager.Party.Party;
+            _enemies = _gameManager.Enemies.CurrentEnemies;
             _turnQueue = new Queue<Actor>();
             BuildTurnOrder();
             if (_turnQueue.Count == 0)
@@ -86,6 +89,13 @@ namespace Start.Scripts.Game
                 return actor.GetComponent<PlayerController>().Initiative;
             }
             return actor.GetComponent<EnemyController>().Initiative;
+        }
+
+        public void PlayerDefeated(PlayerController player)
+        {
+            _party.Remove(player);
+            Destroy(player.gameObject);
+            OnPlayerDefeated?.Invoke();
         }
 
         public void EndTurn()

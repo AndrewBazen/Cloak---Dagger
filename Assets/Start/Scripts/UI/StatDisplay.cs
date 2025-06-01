@@ -27,25 +27,23 @@ namespace Start.Scripts.UI
 
         public void UpdateModifiers(CharacterInfoData player)
         {
-            var counter = 0;
-            foreach (var mod in player.modifiers)
+            for (var i = 0; i < player.PlayerClass.statModifiers.Count; i++)
             {
-                modifiers[counter].GetComponent<TextMeshPro>().text = mod.ToString();
-                counter += 1;
+                modifiers[i].GetComponent<TextMeshPro>().text = player.PlayerClass.statModifiers[i].ToString();
             }
         }
 
         public void UpdateStats(CharacterInfoData player)
         {
             UpdateModifiers(player);
-            manaBar.maxValue = player.maxMana;
-            manaBar.value = player.mana;
-            healthBar.maxValue = player.maxHealth;
-            healthBar.value = player.health;
-            specialBar.maxValue = player.maxSpecial;
-            specialBar.value = player.special;
-            experienceBar.maxValue = player.maxExperience;
-            experienceBar.value = player.experience;
+            manaBar.maxValue = player.MaxMana;
+            manaBar.value = player.Mana;
+            healthBar.maxValue = player.MaxHealth;
+            healthBar.value = player.Health;
+            specialBar.maxValue = player.MaxSpecial;
+            specialBar.value = player.Special;
+            experienceBar.maxValue = player.MaxExperience;
+            experienceBar.value = player.Experience;
         }
     }
 }

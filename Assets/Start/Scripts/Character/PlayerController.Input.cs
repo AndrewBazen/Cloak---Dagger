@@ -10,7 +10,7 @@ namespace Start.Scripts.Character
         {
             if (_combatController == null || !_combatController.isTurn) return;
 
-            GetInRangeTiles();
+            _rangeFinderTiles = _gameManager.RangeFinder.GetRangeTiles(StandingOnTile.Grid2DLocation, characterData.Movement);
             HandleCursorMovement();
 
             if (characterData.HasMovement)

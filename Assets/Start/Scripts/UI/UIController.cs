@@ -8,15 +8,29 @@ namespace Start.Scripts.UI
 {
     public class UIController : MonoBehaviour
     {
+        public static UIController Instance { get; private set; }
+        private GameManager _gameManager;
         [SerializeField] private StatDisplay statDisplay;
         [SerializeField] private InventoryDisplay inventoryDisplay;
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+        }
+
+        private void Start()
+        {
+            _gameManager = GameManager.Instance;
         }
 
         private void OnDestroy()
         {
+            // TODO: Unsubscribe from events
         }
 
         private void UpdateStats(CharacterInfoData data)

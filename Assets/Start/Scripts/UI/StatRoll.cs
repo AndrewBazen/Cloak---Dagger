@@ -47,7 +47,7 @@ namespace Start.Scripts.UI
                     dropdown.options[currIndex].text = stat.ToString();
                 }
                 statDropDownController.currOptionPool.Add(new TMP_Dropdown.OptionData(stat.ToString()), currIndex);
-                _player._enemyData.stats.Add(stat);
+                _player.Stats[statDropDowns[0].options[currIndex].text] = stat;
             }
         }
     }

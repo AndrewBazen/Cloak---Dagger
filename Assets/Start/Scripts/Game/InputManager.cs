@@ -2,7 +2,7 @@
 
 using System;
 using UnityEngine;
-
+using Start.Scripts.Character;
 namespace Start.Scripts.Game
 {
     public class InputManager : MonoBehaviour
@@ -12,7 +12,7 @@ namespace Start.Scripts.Game
         public event Action OnPausePressed;
         public event Action OnConfirm;
         public event Action OnCancel;
-        public event Action<Vector2> OnMoveInput;
+        public event Action OnMoveInput;
         public event Action<Vector2> OnMouseMoved;
         public event Action OnPrimaryClick;
 
@@ -37,16 +37,13 @@ namespace Start.Scripts.Game
         {
             if (Input.GetKeyDown(KeyCode.Escape))
                 OnPausePressed?.Invoke();
+                OnCancel?.Invoke();
 
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
                 OnConfirm?.Invoke();
 
-            if (Input.GetKeyDown(KeyCode.Backspace))
-                OnCancel?.Invoke();
-
-            Vector2 move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-            if (move != Vector2.zero)
-                OnMoveInput?.Invoke(move);
+            if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
+                OnMoveInput?.Invoke();
         }
 
         private void HandleMouseInput()

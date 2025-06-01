@@ -9,11 +9,13 @@ using Start.Resources;
 using Start.Scripts.BaseClasses;
 using UnityEngine;
 using Start.Scripts.Levels;
+using Unity.VisualScripting;
 
 namespace Start.Scripts.Game
 {
     public class PartyManager : MonoBehaviour
     {
+        public static PartyManager Instance { get; private set; }
         private readonly List<CharacterInfoData> _partyInfo = new();
         private readonly List<GameObject> _partyObjects = new();
         private List<PlayerController> _party;
@@ -41,6 +43,17 @@ namespace Start.Scripts.Game
                 _party = value;
                 OnPartyUpdated?.Invoke(_partyInfo);
             }
+        }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            Initialize();
         }
 
 
@@ -77,6 +90,21 @@ namespace Start.Scripts.Game
             }
         }
 
+        public void UpdatePartyData()
+        {
+            _partyInfo.Clear();
+            foreach (var player in _party)
+            {
+                _partyInfo.Add(player.characterData);
+            }
+            OnPartyUpdated?.Invoke(_partyInfo);
+        }
+
+        public PlayerController GetPlayer(int id)
+        {
+            return _party.Find(p => p.characterData.Id == id);
+        }
+
         public CharacterInfoData SpawnPlayer(Vector3 position, PlayerClass playerClass = null)
         {
             GameObject playerObject = Instantiate(playerPrefab, position, Quaternion.identity, playerContainer.transform);
@@ -100,12 +128,25 @@ namespace Start.Scripts.Game
             return playerData;
         }
 
-        //TODO: create a LevelData Lodar that handles loading level data from a file or database
+        //TODO: create a LevelData Loader that handles loading level data from a file or database
+
+        public void SpawnPlayers(List<CharacterInfoData> partyData)
+        {
+            for (int i = 0; i < partyData.Count; i++)
+            {
+                var data = partyData[i];
+                GameObject playerObject = Instantiate(playerPrefab, playerContainer.transform);
+                var playerController = playerObject.GetComponent<PlayerController>();
+                playerController.characterData = data;
+                _party.Add(playerController);
+                _partyObjects.Add(playerObject);
+                _partyInfo.Add(data);
+            }
+        }
+
         public List<CharacterInfoData> SpawnPlayers(
-            List<CharacterLoadData> partyData,
-            List<OverlayTile> spawnTiles,
-            GameObject playerPrefab,
-            Transform container)
+            List<CharacterInfoData> partyData,
+            List<OverlayTile> spawnTiles)
         {
             _partyInfo.Clear();
 
@@ -117,21 +158,27 @@ namespace Start.Scripts.Game
                 if (data == null || tile == null)
                     continue;
 
-                if (data.playerClass == null)
+                if (data.PlayerClass == null)
                 {
-                    Debug.LogWarning($"Player class is null for character {data.characterName}. Skipping spawn.");
+                    Debug.LogWarning($"Player class is null for character {data.Id}. Skipping spawn.");
                     continue;
                 }
 
-                SpawnPlayer(tile.transform.position, data.playerClass);
+                var playerData = SpawnPlayer(tile.transform.position, data.PlayerClass);
+                var playerController = playerData.GetComponent<PlayerController>();
+                var playerGO = playerController.gameObject;
 
-                if (info != null)
+
+                if (playerData != null)
                 {
-                    info.playerClass = data.playerClass;
-                    info.name = data.characterName;
-                    playerGO.transform.position = tile.transform.position + new Vector3(0f, 0.0001f, 0f);
+                   
+                    if (tile != null)
+                    {
+                        playerData.TilePos = tile;
+                        playerGO.transform.position = tile.transform.position + new Vector3(0f, 0.0001f, 0f);
+                    }
 
-                    _partyInfo.Add(info);
+                    _partyInfo.Add(playerData);
                 }
             }
 

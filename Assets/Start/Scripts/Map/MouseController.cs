@@ -14,7 +14,6 @@ namespace Start.Scripts
         public float speed;
         public GameObject playerPrefab;
         private PlayerController _player;
-        private bool _isPlayersTurn;
         public int playerMovement;
 
         private List<OverlayTile> _path;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using Start.Scripts.Character;
 using Start.Scripts.Dice;
 using Start.Scripts.Enemy;
@@ -16,6 +17,9 @@ namespace Start.Scripts.Combat
         private PlayerController _playerController;
         private EnemyController _enemyController;
         private GameManager _gameManager;
+        public event Action OnPlayerDefeated;
+        public event Action OnEnemyDefeated;
+
 
         public void OnGameStateChanged(GameManager.GameState newState)
         {
@@ -91,11 +95,11 @@ namespace Start.Scripts.Combat
                 var hitRoll = _diceRoll.RollToHit(player);
                 if (hitRoll < other.ArmorClass)
                 {
-                    _gameManager.Combat.DamageEnemy(other, 0); // No damage on miss
+                    _gameManager.Combat.DamageActor(other, 0); // No damage on miss
                     return;
                 }
                 var dmg = _diceRoll.RollDmg(player);
-                _gameManager.Combat.DamageEnemy(other, dmg);
+                _gameManager.Combat.DamageActor(other, dmg);
             }
             else
             {
@@ -103,7 +107,7 @@ namespace Start.Scripts.Combat
                 var hitRoll = _diceRoll.RollToHit(player);
                 if (hitRoll < other.ArmorClass)
                 {
-                    _gameManager.Combat.DamageEnemy(other, 0); // No damage on miss
+                    _gameManager.Combat.DamageActor(other, 0); // No damage on miss
                     return;
                 }
                 var dmg = _diceRoll.RollDmg(player);
@@ -116,21 +120,21 @@ namespace Start.Scripts.Combat
             {
                 // Use GameManager for attack resolution
                 var hitRoll = _diceRoll.RollToHit(info);
-                if (hitRoll < other.characterData.armorClass)
+                if (hitRoll < other.characterData.ArmorClass)
                 {
-                    _gameManager.Combat.DamageCharacter(other, 0); // No damage on miss
+                    _gameManager.Combat.DamageActor(other, 0); // No damage on miss
                     return;
                 }
                 var dmg = _diceRoll.RollDmg(info);
-                _gameManager.Combat.DamageCharacter(other, dmg);
+                _gameManager.Combat.DamageActor(other, dmg);
             }
             else
             {
                 // Fallback to legacy behavior
                 var hitRoll = _diceRoll.RollToHit(info);
-                if (hitRoll < other.characterData.armorClass)
+                if (hitRoll < other.characterData.ArmorClass)
                 {
-                    _gameManager.Combat.DamageCharacter(other, 0); // No damage on miss
+                    _gameManager.Combat.DamageActor(other, 0); // No damage on miss
                     return;
                 }
                 var dmg = _diceRoll.RollDmg(info);
@@ -144,36 +148,25 @@ namespace Start.Scripts.Combat
         {
             if (dmg >= other.CurrentHealth)
             {
-                _gameManager.Party.RemoveFromParty(other.gameObject);
-                Destroy(other.gameObject);
-                Debug.Log("player killed");
+                _gameManager.Combat.PlayerDefeated(other);
             }
             other.CurrentHealth -= dmg;
-            _gameManager.Combat.DamageCharacter(other, dmg);
+            _gameManager.Combat.DamageActor(other, dmg);
         }
         private void TakeDamage(int dmg, EnemyController other)
         {
             if (dmg >= other.CurrentHealth)
             {
                 _gameManager.Enemies.RemoveEnemy(other);
-                gameObject.GetComponent<PlayerController>()?.Enemies.Remove(other.gameObject);
                 Destroy(other.gameObject);
             }
             other.CurrentHealth -= dmg;
-            _gameManager.Combat.DamageEnemy(other, dmg);
+            _gameManager.Combat.DamageActor(other, dmg);
         }
 
-
-        private void GameOver()
+        public void Destroy()
         {
-            if (_gameManager != null)
-            {
-                _gameManager.EndGame();
-            }
-            else
-            {
-                SceneManager.LoadScene("GameOver");
-            }
+            Destroy(gameObject);
         }
     }
 }

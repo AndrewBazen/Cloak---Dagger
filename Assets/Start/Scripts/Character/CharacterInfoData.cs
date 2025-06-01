@@ -3,13 +3,15 @@ using Start.Scripts.Classes;
 using Start.Scripts.Inventory;
 using Start.Scripts.Levels;
 using UnityEngine;
+using System;
 
 namespace Start.Scripts.Character
 {
+    [Serializable]
     [CreateAssetMenu(fileName = "NewCharacter", menuName = "RPG/Character Info", order = 1)]
     public class CharacterInfoData : ScriptableObject 
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public PlayerClass PlayerClass { get; set; }
         public Level CurrentLevel { get; set; }
         public OverlayTile TilePos { get; set; }
@@ -36,7 +38,7 @@ namespace Start.Scripts.Character
         public List<Ability> Abilities { get; set; }
 
         public Dictionary<string, int> Stats { get; set; }
-        public Dictionary<string, int> StatBonuses { get; set; }
+        public List<int> Modifiers { get; set; }
 
         public bool HasDisadvantage { get; set; }
         public bool HasAdvantage { get; set; }

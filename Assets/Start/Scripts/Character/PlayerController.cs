@@ -17,11 +17,6 @@ namespace Start.Scripts.Character
         public GameObject PlayerContainer => playerContainer;
         public GameObject EnemyContainer => enemyContainer;
         public GameObject InventoryContainer => inventoryContainer;
-        public List<GameObject> Enemies
-        {
-            get => _enemies;
-            set => _enemies = value;
-        }
 
         [SerializeField] private GameObject playerContainer;
         [SerializeField] private GameObject enemyContainer;
@@ -31,7 +26,6 @@ namespace Start.Scripts.Character
         private StatDisplay statDisplay;
 
         [Header("State")]
-        private List<GameObject> _enemies;
         private EnemyController _selectedEnemy;
         private List<OverlayTile> _path;
         private List<OverlayTile> _rangeFinderTiles;
@@ -48,7 +42,6 @@ namespace Start.Scripts.Character
         private void Awake()
         {
             _camera = Camera.main;
-            _enemies = new List<GameObject>();
             InitializeComponents();
             SubscribeToEvents();
         }
@@ -79,18 +72,22 @@ namespace Start.Scripts.Character
             {
                 _combatController = gameObject.AddComponent<CombatController>();
             }
-
-            _camera = Camera.main;
         }
 
 
         protected override void InitializeActor()
         {
-            if (characterData == null || string.IsNullOrEmpty(characterData.Id)) return;
+            if (characterData == null) return;
 
-            var statController = new StatController();
-            statController.UpdateStats(characterData, );
-
+            characterData.Stats = new Dictionary<string, int> {
+                { "Str", 0 },
+                { "Dex", 0 },
+                { "Con", 0 },
+                { "Int", 0 },
+                { "Wis", 0 },
+                { "Cha", 0 },
+            };
+            characterData.Modifiers = new List<int> { 0, 0, 0, 0, 0, 0 };
             characterData.Inventory = inventoryContainer?.GetComponent<InventoryHolder>();
         }
     }

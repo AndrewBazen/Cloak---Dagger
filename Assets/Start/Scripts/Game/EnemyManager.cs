@@ -11,24 +11,37 @@ namespace Start.Scripts.Game
 {
     public class EnemyManager : MonoBehaviour
     {
+        public static EnemyManager Instance { get; private set; }
         public event Action<List<EnemyController>> OnEnemiesChanged;
         public event Action<EnemyController> OnEnemyDied;
 
         [SerializeField] private GameObject enemyPrefab;
         [SerializeField] private GameObject enemyContainer;
 
-        public List<GameObject> enemyObjects = new();
-        public List<EnemyController> enemies = new();
-        private float difficultyMultiplier = 1.0f;
+        public List<EnemyController> CurrentEnemies => _enemies;
+        public List<GameObject> EnemyObjects => _enemyObjects;
 
-        public IReadOnlyList<EnemyController> CurrentEnemies => enemies;
-        public IReadOnlyList<GameObject> EnemyObjects => enemyObjects;
-        private IReadOnlyList<CharacterInfoData> partyData;
+        private List<GameObject> _enemyObjects;
+        private List<EnemyController> _enemies;
+
+        private float difficultyMultiplier;
+        private GameManager _gameManager;
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            Initialize();
+        }
+
         public void Initialize()
         {
-            enemies.Clear();
-            enemyObjects.Clear();
-            partyData = GameManager.Instance.Party.PartyMembers;
+            _gameManager = GameManager.Instance;
+            _enemies.Clear();
+            _enemyObjects.Clear();
         }
 
         public void SpawnEnemiesForLevel(int level)
@@ -41,7 +54,7 @@ namespace Start.Scripts.Game
                 EnemyController newEnemy = SpawnEnemy(position);
                 ApplyDifficulty(newEnemy);
             }
-            OnEnemiesChanged?.Invoke(enemies);
+            OnEnemiesChanged?.Invoke(_enemies);
         }
 
         private EnemyController SpawnEnemy(Vector3 position)
@@ -49,8 +62,8 @@ namespace Start.Scripts.Game
             var enemyObj = Instantiate(enemyPrefab, position, Quaternion.identity, enemyContainer.transform);
             var controller = enemyObj.GetComponent<EnemyController>();
 
-            enemyObjects.Add(enemyObj);
-            enemies.Add(controller);
+            _enemyObjects.Add(enemyObj);
+            _enemies.Add(controller);
             return controller;
         }
 
@@ -79,24 +92,24 @@ namespace Start.Scripts.Game
 
         public void RemoveEnemy(EnemyController enemy)
         {
-            if (!enemies.Contains(enemy)) return;
-            enemies.Remove(enemy);
-            enemyObjects.Remove(enemy.gameObject);
+            if (!_enemies.Contains(enemy)) return;
+            _enemies.Remove(enemy);
+            _enemyObjects.Remove(enemy.gameObject);
             Destroy(enemy.gameObject);
 
-            OnEnemiesChanged?.Invoke(enemies);
+            OnEnemiesChanged?.Invoke(_enemies);
             OnEnemyDied?.Invoke(enemy);
         }
 
         private void ClearEnemies()
         {
-            foreach (var obj in enemyObjects)
+            foreach (var obj in _enemyObjects)
             {
                 if (obj != null)
                     Destroy(obj);
             }
-            enemies.Clear();
-            enemyObjects.Clear();
+            _enemies.Clear();
+            _enemyObjects.Clear();
         }
 
         public void SetDifficultyMultiplier(float multiplier)

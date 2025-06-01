@@ -15,7 +15,7 @@ namespace Start.Scripts.Enemy
         public List<Ability> Abilities;
         public List<string> StatType;
         public List<int> Stats;
-        public Dictionary<string, int> StatBonuses;
+        public Dictionary<string, int> Modifiers;
         public OverlayTile TilePosition;
         public Vector3 Position;
         public string AttackType;
