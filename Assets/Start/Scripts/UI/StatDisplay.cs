@@ -4,7 +4,7 @@ using TMPro;
 using Start.Scripts.Character;
 using UnityEngine;
 using UnityEngine.UI;
-
+using System.Linq;
 namespace Start.Scripts.UI
 {
     [Serializable]
@@ -29,7 +29,7 @@ namespace Start.Scripts.UI
         {
             for (var i = 0; i < player.PlayerClass.statModifiers.Count; i++)
             {
-                modifiers[i].GetComponent<TextMeshPro>().text = player.PlayerClass.statModifiers[i].ToString();
+                modifiers[i].GetComponent<TextMeshPro>().text = player.PlayerClass.statModifiers[player.Stats.Keys.ElementAt(i)].ToString();
             }
         }
 
@@ -42,7 +42,6 @@ namespace Start.Scripts.UI
             healthBar.value = player.Health;
             specialBar.maxValue = player.MaxSpecial;
             specialBar.value = player.Special;
-            experienceBar.maxValue = player.MaxExperience;
             experienceBar.value = player.Experience;
         }
     }

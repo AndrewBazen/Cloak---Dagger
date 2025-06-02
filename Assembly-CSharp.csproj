@@ -109,6 +109,7 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextInfoDebugTool.cs" />
     <Compile Include="Assets\Start\Scripts\UI\ManaBar.cs" />
     <Compile Include="Assets\Start\Scripts\Character\PlayerController.Events.cs" />
+    <Compile Include="Assets\Start\Scripts\UI\PlayerClassInfo.cs" />
     <Compile Include="Assets\Start\Scripts\Game\BaseState.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeA.cs" />
     <Compile Include="Assets\Start\Scripts\UI\DropDownDisable.cs" />

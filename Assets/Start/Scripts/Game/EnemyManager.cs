@@ -34,14 +34,15 @@ namespace Start.Scripts.Game
                 return;
             }
             Instance = this;
+            DontDestroyOnLoad(gameObject);
             Initialize();
         }
 
         public void Initialize()
         {
             _gameManager = GameManager.Instance;
-            _enemies.Clear();
-            _enemyObjects.Clear();
+            _enemies = new List<EnemyController>();
+            _enemyObjects = new List<GameObject>();
         }
 
         public void SpawnEnemiesForLevel(int level)

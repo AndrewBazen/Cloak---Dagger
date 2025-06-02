@@ -26,6 +26,7 @@ namespace Start.Scripts
         {
             _gameManager = GameManager.Instance;
             _camera = Camera.main;
+            cursor = _gameManager.Cursor;
             _path = new List<OverlayTile>();
             _isMoving = false;
             _rangeFinderTiles = new List<OverlayTile>();

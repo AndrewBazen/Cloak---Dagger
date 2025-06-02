@@ -12,6 +12,7 @@ using UnityEngine;
 
 public class SaveManager : MonoBehaviour
 {
+    public static SaveManager Instance { get; private set; }
     private List<SaveData> _saves;
     private GameManager _gameManager;
 
@@ -32,6 +33,13 @@ public class SaveManager : MonoBehaviour
     }
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
         _gameManager = GameManager.Instance;
         Initialize();
     }

@@ -27,12 +27,9 @@ namespace Start.Scripts.Character
 
         [Header("State")]
         private EnemyController _selectedEnemy;
-        private List<OverlayTile> _path;
         private List<OverlayTile> _rangeFinderTiles;
         private OverlayTile _overlayTile;
-        private bool _isMoving;
-        private CombatController _combatController;
-        private static Camera _camera;
+       private static Camera _camera;
 
 
         public PlayerController()
@@ -45,6 +42,11 @@ namespace Start.Scripts.Character
             _camera = Camera.main;
             InitializeComponents();
             SubscribeToEvents();
+        }
+
+        public void Initialize(CharacterInfoData characterData)
+        {
+            this.characterData = characterData;
         }
 
         protected override void Start()

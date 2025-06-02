@@ -26,7 +26,7 @@ namespace Start.Scripts.Character
 
             if (_gameManager != null && characterData != null)
             {
-                _gameManager.Party.RemoveFromParty(gameObject);
+                _gameManager.Party.RemoveFromParty(characterData);
             }
 
             Destroy(gameObject);

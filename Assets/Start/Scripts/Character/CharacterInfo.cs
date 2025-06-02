@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Start.Scripts.Classes;
 using Start.Scripts.Inventory;
 using Start.Scripts.UI;
@@ -80,7 +81,7 @@ namespace Start.Scripts.Character
             {
                 for (var i = 0; i < Mathf.Min(modifiers.Count, playerClass.statModifiers.Count); i++)
                 {
-                    modifiers[i] += playerClass.statModifiers[i];
+                    modifiers[i] += playerClass.statModifiers[playerClass.statModifiers.Keys.ElementAt(i)];
                 }
             }
         }

@@ -49,31 +49,31 @@ namespace Start.Scripts.Map
             // TODO: implement populating the overlay grid based on the tilemaps
             // TODO: implement a way to set the player and enemy spawn tiles based on level data
 
-            GenerateOverlayGrid(gridWidth, gridHeight, originPosition, groundTileMap);
+            GenerateOverlayGrid(groundTileMap);
             SetupNeighbors();
         }
 
-        private void GenerateOverlayGrid(int width, int height, Vector3 originPosition, Tilemap groundMap)
+        private void GenerateOverlayGrid(Tilemap groundMap)
         {
-            for (var y = 0; y < height; y++)
+            var bounds = groundMap.cellBounds;
+            for (int y = bounds.yMin; y < bounds.yMax; y++)
             {
-                for (var x = 0; x < width; x++)
+                for (int x = bounds.xMin; x < bounds.xMax; x++)
                 {
-                    var tilePosition = groundMap.CellToWorld(new Vector3Int(x, y, 0));
-                    var overlayTile = Instantiate(overlayTilePrefab, overlayContainer.transform);
+                    var cellPosition = new Vector3Int(x, y, 0);
+                    var tilePosition = groundMap.CellToWorld(cellPosition);
+                    var overlayTile = Instantiate(overlayTilePrefab, tilePosition, Quaternion.identity, overlayContainer.transform);
 
                     // Set position and scale based on ground map
                     var cellSize = groundMap.cellSize;
-                    overlayTile.transform.position = tilePosition;
                     overlayTile.transform.localScale = new Vector3(cellSize.x, cellSize.y, 1);
 
                     // Set grid location for pathfinding
                     var tileComponent = overlayTile.GetComponent<OverlayTile>();
-                    tileComponent.gridLocation = new Vector3Int(x, y, 0);
+                    tileComponent.gridLocation = cellPosition;
 
                     // Add to our map dictionary
                     Map.Add(new Vector2Int(x, y), tileComponent);
-
                 }
             }
         }

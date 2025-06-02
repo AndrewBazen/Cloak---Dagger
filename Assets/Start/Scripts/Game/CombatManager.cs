@@ -31,7 +31,7 @@ namespace Start.Scripts.Game
 
         private void Awake()
         {
-
+            _gameManager = GameManager.Instance;
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
@@ -45,7 +45,6 @@ namespace Start.Scripts.Game
                 Debug.LogError("GameManager instance is null. CombatManager cannot function without it.");
                 return;
             }
-            _gameManager = GameManager.Instance;
         }
 
         public void Initialize()

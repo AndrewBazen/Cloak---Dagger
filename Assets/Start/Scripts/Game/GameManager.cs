@@ -71,8 +71,8 @@ namespace Start.Scripts.Game
                 return;
             }
             Instance = this;
-            InitializeManagers();
             DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(Camera.main.gameObject);
         }
 
         public void SetCurrentLevelData(LevelData levelData)
@@ -93,6 +93,7 @@ namespace Start.Scripts.Game
 
         private void Start()
         {
+            InitializeManagers();
             _sceneEventManager.OnSceneLoaded += HandleSceneLoaded;
             _inputManager.OnPausePressed += TogglePause;
             //_combatManager.OnPlayerDefeated += HandlePlayerDefeated;

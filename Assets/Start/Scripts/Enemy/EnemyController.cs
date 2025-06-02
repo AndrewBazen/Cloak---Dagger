@@ -16,16 +16,12 @@ namespace Start.Scripts.Enemy
     public class EnemyController : Actor
     {
         private IReadOnlyList<GameObject> _allies;
-        private CombatController _combatController;
-        private List<OverlayTile> _path;
         private List<OverlayTile> _rangeFinderTiles;
         private List<OverlayTile> _rangeTileDistances;
         private Strategy _strategy;
-        private bool _isMoving;
         private bool _strategyFound;
         private IAIStrategy _aiStrategy;
         private EnemyData _enemyData;
-        private OverlayTile _standingOnTile;
         [SerializeField] private GameObject playerContainer;
         [SerializeField] private GameObject enemyContainer;
 
@@ -53,7 +49,7 @@ namespace Start.Scripts.Enemy
         void Update()
         {
             // checks if it is the enemy's turn.
-            if (_combatController.isTurn)
+            if (_isTurn)
             {
                 // gets player object, range, and tile.
                 if (!_strategyFound)

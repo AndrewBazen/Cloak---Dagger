@@ -53,6 +53,7 @@ namespace Start.Scripts.Game
                 return;
             }
             Instance = this;
+            DontDestroyOnLoad(gameObject);
             Initialize();
         }
 

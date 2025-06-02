@@ -1,15 +1,12 @@
 using System;
 using Start.Scripts.Interfaces;
-using Start.Scripts.Enemy;
 using Start.Scripts.Game;
 using Start.Scripts.Combat;
-using Start.Scripts.Character;
 using System.ComponentModel;
 using Start.Resources;
 using Random = System.Random;
 using Component = UnityEngine.Component;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Start.Scripts.BaseClasses
@@ -17,21 +14,21 @@ namespace Start.Scripts.BaseClasses
     public abstract class Actor : MonoBehaviour, ITrackable, INotifyPropertyChanged
     {
 
-        private bool _hasTurn;
-        private bool _hasAction;
-        private bool _hasBonusAction;
-        private bool _hasReaction;
-        private int _initiative;
-        private OverlayTile _standingOnTile;
-        private int _currentHealth;
-        private int _currentMana;
-        private bool _hasMovement;
-        private bool _isMoving;
-        private List<OverlayTile> _path = new List<OverlayTile>();
-        private Dictionary<string, int> _statBonuses;
-        private List<Actor> _controllersInParent;
-        private Actor _controller;
-        private Component _combatController;
+        protected bool _isTurn;
+        protected bool _hasAction;
+        protected bool _hasBonusAction;
+        protected bool _hasReaction;
+        protected int _initiative;
+        protected OverlayTile _standingOnTile;
+        protected int _currentHealth;
+        protected int _currentMana;
+        protected bool _hasMovement;
+        protected bool _isMoving;
+        protected List<OverlayTile> _path;
+        protected Dictionary<string, int> _statBonuses;
+        protected List<Actor> _controllersInParent;
+        protected Actor _controller;
+        protected CombatController _combatController;
 
         public event Action OnTurnStarted;
         public event Action OnTurnEnded;
@@ -43,10 +40,10 @@ namespace Start.Scripts.BaseClasses
         public GameManager _gameManager => GameManager.Instance;
         public bool HasTurn
         {
-            get => _hasTurn;
+            get => _isTurn;
             set
             {
-                _hasTurn = value;
+                _isTurn = value;
                 OnPropertyChanged(nameof(HasTurn));
             }
         }
@@ -155,23 +152,23 @@ namespace Start.Scripts.BaseClasses
 
         protected virtual void InitializeActor()
         {
-            if (_combatController == null)
+            if (gameObject.GetComponent<CombatController>() == null)
             {
                 // initialize combat controller
-                _combatController = gameObject.GetComponent<CombatController>();
+                _combatController = gameObject.AddComponent<CombatController>();
             }
             // Custom initialization logic for actors can be added here
         }
 
         public virtual void StartTurn()
         {
-            HasTurn = true;
+            _isTurn = true;
             OnTurnStarted?.Invoke();
         }
 
         public virtual void EndTurn()
         {
-            HasTurn = false;
+            _isTurn = false;
             OnTurnEnded?.Invoke();
         }
 
@@ -203,7 +200,7 @@ namespace Start.Scripts.BaseClasses
          * description: gets the initiative of the current enemy.
          * @return void
          */
-        private void RollInitiative()
+        protected void RollInitiative()
         {
             var rand = new Random();
             Initiative = rand.Next(1, 20);
